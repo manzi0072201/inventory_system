@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Backend typecheck
+        working-directory: backend
+        run: npm run typecheck
+
+      - name: Backend build
+        working-directory: backend
+        run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Frontend typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Frontend build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Start backend
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          NEON_AUTH_BASE_URL: ${{ secrets.NEON_AUTH_BASE_URL }}
+          NEON_AUTH_COOKIE_SECRET: ${{ secrets.NEON_AUTH_COOKIE_SECRET }}
+          NEON_AUTH_JWKS_URL: ${{ secrets.NEON_AUTH_JWKS_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
+        run: npm run start &
+
+      - name: Wait for backend
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:4000/api/health > /dev/null; then
+              echo "backend ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "backend failed to start"
+          exit 1
+
+      - name: Integration tests
+        working-directory: backend
+        env:
+          TEST_BACKEND_URL: http://localhost:4000
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: npm test
