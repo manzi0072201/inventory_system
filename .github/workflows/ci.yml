@@ -61,7 +61,7 @@ jobs:
 
       - name: Start backend
         working-directory: backend
-        run: npm run start &
+        run: npm run start > backend.log 2>&1 &
 
       - name: Wait for backend
         run: |
@@ -78,3 +78,8 @@ jobs:
       - name: Integration tests
         working-directory: backend
         run: npm test
+
+      - name: Dump backend log on failure
+        if: failure()
+        working-directory: backend
+        run: cat backend.log
