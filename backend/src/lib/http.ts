@@ -32,6 +32,7 @@ export function fail(error: ApiError) {
 }
 
 export function failUnexpected(error: unknown) {
+  console.error("[api] unexpected error", error);
   const apiError =
     error instanceof ApiError
       ? error
