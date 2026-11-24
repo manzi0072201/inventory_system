@@ -114,7 +114,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       if (readIds.has(id)) return;
       setReadIds((current) => new Set(current).add(id));
-      if (id.startsWith("live:")) return;
       void api.markNotificationRead(id)
         .then(() => setError(null))
         .catch((cause: unknown) => {
@@ -134,8 +133,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       unreadIds.forEach((id) => next.add(id));
       return next;
     });
-    if (unreadIds.every((id) => id.startsWith("live:"))) return;
-    void api.markAllNotificationsRead()
+    void Promise.all(unreadIds.map((id) => api.markNotificationRead(id)))
       .then(() => setError(null))
       .catch((cause: unknown) => {
         setError(errorMessage(cause, "Unable to mark notifications as read."));

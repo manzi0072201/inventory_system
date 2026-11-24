@@ -96,6 +96,14 @@ async function liveNotifications(
     hasPermission(user.role, user.permissions, key);
   const now = new Date().toISOString();
   const items: NotificationItem[] = [];
+  const rows = (await sql`
+    select notification_key, read_at
+    from live_notification_reads
+    where user_id = ${user.id}::uuid
+  `) as { notification_key: string; read_at: unknown }[];
+  const readStates = new Map(
+    rows.map((row) => [row.notification_key, row.read_at] as const),
+  );
   const add = (
     id: string,
     category: string,
@@ -105,6 +113,7 @@ async function liveNotifications(
     href: string,
     kind = "alert",
   ) => {
+    const readAt = readStates.get(id);
     items.push({
       id: `live:${id}`,
       kind,
@@ -114,7 +123,7 @@ async function liveNotifications(
       description,
       href,
       occurredAt: now,
-      readAt: null,
+      readAt: readAt ? toIsoString(readAt) : null,
       createdAt: now,
     });
   };
