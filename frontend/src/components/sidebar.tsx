@@ -82,14 +82,6 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
           </div>
         ))}
       </nav>
-
-      <div className="sidebar-footer">
-        <span>v5.9 Core ERP</span>
-        <span className="server-status">
-          <i /> Kigali Server
-        </span>
-        <small>Currency: RWF (Frw)</small>
-      </div>
     </aside>
   );
 }

@@ -1,10 +1,14 @@
 import { z } from "zod";
 import { writeAuditLog } from "@/lib/audit";
-import { requireRequestSession } from "@/lib/auth/session";
-import { getSql } from "@/lib/db";
+import { requireRequestSession, type AppUserProfile } from "@/lib/auth/session";
+import { getSql, type SqlExecutor } from "@/lib/db";
 import { toIsoString } from "@/lib/date-range";
 import { notFound } from "@/lib/errors";
 import { failUnexpected, ok, requestMeta, requirePermission } from "@/lib/http";
+import {
+  hasPermission,
+  type PermissionKey,
+} from "@/lib/permissions";
 import { paginate, parsePagination } from "@/lib/pagination";
 import { parseSort, sortRows } from "@/lib/sorting";
 import { parseJson, parseQuery, uuid } from "@/lib/validation";
@@ -77,6 +81,206 @@ function mapNotification(row: NotificationRow) {
   };
 }
 
+type NotificationItem = ReturnType<typeof mapNotification>;
+
+const money = (value: unknown) =>
+  `RWF ${Number(value ?? 0).toLocaleString("en-US", {
+    maximumFractionDigits: 0,
+  })}`;
+
+async function liveNotifications(
+  sql: SqlExecutor,
+  user: AppUserProfile,
+): Promise<NotificationItem[]> {
+  const can = (key: PermissionKey) =>
+    hasPermission(user.role, user.permissions, key);
+  const now = new Date().toISOString();
+  const items: NotificationItem[] = [];
+  const add = (
+    id: string,
+    category: string,
+    tone: string,
+    title: string,
+    description: string,
+    href: string,
+    kind = "alert",
+  ) => {
+    items.push({
+      id: `live:${id}`,
+      kind,
+      category,
+      tone,
+      title,
+      description,
+      href,
+      occurredAt: now,
+      readAt: null,
+      createdAt: now,
+    });
+  };
+
+  if (can("stock")) {
+    const [row] = await sql`
+      select count(*)::int as count
+      from stock_balances sb
+      join products p on p.id = sb.product_id
+      where p.deleted_at is null
+        and sb.reorder_point > 0
+        and sb.quantity_on_hand <= sb.reorder_point
+    `;
+    const count = Number(row?.count ?? 0);
+    if (count > 0) {
+      add(
+        "low-stock",
+        "stock",
+        "danger",
+        `${count} product${count === 1 ? "" : "s"} below reorder point`,
+        "Open Stock Management to review and replenish before sales are affected.",
+        "/stock",
+      );
+    }
+  }
+
+  if (can("sales")) {
+    const [row] = await sql`
+      select count(*)::int as count
+      from sales
+      where status in ('Pending', 'Ordered')
+    `;
+    const count = Number(row?.count ?? 0);
+    if (count > 0) {
+      add(
+        "pending-sales",
+        "sales",
+        "warning",
+        `${count} sale${count === 1 ? "" : "s"} awaiting fulfilment`,
+        "Pending and ordered sales need confirmation before they count as completed.",
+        "/sales",
+      );
+    }
+  }
+
+  if (can("debtors")) {
+    const [row] = await sql`
+      select count(*)::int as count
+      from sales
+      where status = 'Completed' and paid_amount < total_amount
+    `;
+    const count = Number(row?.count ?? 0);
+    if (count > 0) {
+      add(
+        "customer-balances",
+        "customer",
+        "warning",
+        `${count} sale${count === 1 ? "" : "s"} still have a balance`,
+        "Follow up outstanding customer balances to protect cash flow.",
+        "/debtors",
+      );
+    }
+  }
+
+  if (can("purchases")) {
+    const [pending] = await sql`
+      select count(*)::int as count
+      from purchases
+      where status in ('Pending', 'Ordered')
+    `;
+    const pendingCount = Number(pending?.count ?? 0);
+    if (pendingCount > 0) {
+      add(
+        "pending-purchases",
+        "purchase",
+        "warning",
+        `${pendingCount} purchase${pendingCount === 1 ? "" : "s"} awaiting receipt`,
+        "Open Purchases to confirm incoming supplier goods.",
+        "/purchases",
+      );
+    }
+  }
+
+  if (can("purchases") && can("suppliers")) {
+    const [unpaid] = await sql`
+      select count(*)::int as count
+      from purchases
+      where paid_amount < total_amount
+    `;
+    const unpaidCount = Number(unpaid?.count ?? 0);
+    if (unpaidCount > 0) {
+      add(
+        "supplier-balances",
+        "supplier",
+        "warning",
+        `${unpaidCount} supplier balance${unpaidCount === 1 ? "" : "s"} outstanding`,
+        "Review unpaid purchase balances before the next supplier payment run.",
+        "/suppliers",
+      );
+    }
+  }
+
+  if (can("expenses")) {
+    const [row] = await sql`
+      select count(*)::int as count
+      from expenses
+      where status = 'Pending' and date <= current_date
+    `;
+    const count = Number(row?.count ?? 0);
+    if (count > 0) {
+      add(
+        "pending-expenses",
+        "expense",
+        "warning",
+        `${count} expense${count === 1 ? "" : "s"} pending approval`,
+        "Pending expenses are not yet reflected in net profit.",
+        "/expenses",
+      );
+    }
+  }
+
+  if (can("sales")) {
+    const [sale] = await sql`
+      select s.reference, s.total_amount::text as amount, c.name as customer
+      from sales s
+      join customers c on c.id = s.customer_id
+      order by s.created_at desc
+      limit 1
+    `;
+    if (sale) {
+      add(
+        "latest-sale",
+        "sales",
+        "success",
+        `Sale ${sale.reference} recorded`,
+        `${sale.customer} · ${money(sale.amount)}`,
+        "/sales",
+        "activity",
+      );
+    }
+  }
+
+  if (can("purchases") && can("suppliers")) {
+    const [purchase] = await sql`
+      select p.reference, p.total_amount::text as amount, s.name as supplier
+      from purchases p
+      join suppliers s on s.id = p.supplier_id
+      order by p.created_at desc
+      limit 1
+    `;
+    if (purchase) {
+      add(
+        "latest-purchase",
+        "purchase",
+        "info",
+        `Purchase ${purchase.reference} recorded`,
+        `${purchase.supplier} · ${money(purchase.amount)}`,
+        "/purchases",
+        "activity",
+      );
+    }
+  }
+
+  return items;
+}
+
 export async function GET(request: Request) {
   try {
     const session = await requireRequestSession(request);
@@ -91,21 +295,24 @@ export async function GET(request: Request) {
       "desc",
     );
 
-    let items = ((await sql`
-      select
-        id::text as id,
-        kind,
-        category,
-        tone,
-        title,
-        description,
-        href,
-        occurred_at,
-        read_at,
-        created_at
-      from notifications
-      where user_id = ${session.appUser.id}::uuid
-    `) as NotificationRow[]).map(mapNotification);
+    let items = [
+      ...((await sql`
+        select
+          id::text as id,
+          kind,
+          category,
+          tone,
+          title,
+          description,
+          href,
+          occurred_at,
+          read_at,
+          created_at
+        from notifications
+        where user_id = ${session.appUser.id}::uuid
+      `) as NotificationRow[]).map(mapNotification),
+      ...(await liveNotifications(sql, session.appUser)),
+    ];
 
     if (query.kind) items = items.filter((item) => item.kind === query.kind);
     if (query.category) {

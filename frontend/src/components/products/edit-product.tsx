@@ -1,19 +1,30 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import {
-  productBrands,
-  productCategories,
+  getCustomOptions,
+  rememberCustomOption,
   productWarehouses,
   type Product,
+  type ProductOptionKind,
 } from "@/lib/products-data";
 import { useProducts, UPDATED_FLAG } from "./products-store";
 import { ProductImagePanel, DEFAULT_IMAGE_BG } from "./product-image-panel";
 
 const unitOptions = ["pc", "kg", "g", "l", "ml", "box", "pack", "set"];
 const typeOptions = ["Single", "Variable"];
+
+function uniqueOptions(values: string[]): string[] {
+  const seen = new Set<string>();
+  return values.filter((value) => {
+    const key = value.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 type FormState = {
   name: string;
@@ -65,6 +76,39 @@ export function EditProduct({ code }: { code: string }) {
   const [form, setForm] = useState<FormState | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageUploading, setImageUploading] = useState(false);
+  const [customBrands, setCustomBrands] = useState<string[]>(() =>
+    getCustomOptions("brand"),
+  );
+  const [customCategories, setCustomCategories] = useState<string[]>(() =>
+    getCustomOptions("category"),
+  );
+  const [customUnits, setCustomUnits] = useState<string[]>(() =>
+    getCustomOptions("unit"),
+  );
+  const [addingUnit, setAddingUnit] = useState(false);
+  const [newUnit, setNewUnit] = useState("");
+
+  const brandOptions = useMemo(
+    () => uniqueOptions([...customBrands, ...products.map((item) => item.brand)]),
+    [customBrands, products],
+  );
+  const categoryOptions = useMemo(
+    () =>
+      uniqueOptions([
+        ...customCategories,
+        ...products.map((item) => item.category),
+      ]),
+    [customCategories, products],
+  );
+  const availableUnits = useMemo(
+    () =>
+      uniqueOptions([
+        ...unitOptions,
+        ...customUnits,
+        ...products.map((item) => item.unit),
+      ]),
+    [customUnits, products],
+  );
 
   useEffect(() => {
     if (product) setForm(toForm(product));
@@ -130,6 +174,28 @@ export function EditProduct({ code }: { code: string }) {
     });
   };
 
+  const rememberOption = (kind: ProductOptionKind, value: string) => {
+    const stored = rememberCustomOption(kind, value);
+    if (kind === "brand") setCustomBrands(stored);
+    else if (kind === "category") setCustomCategories(stored);
+    else setCustomUnits(stored);
+  };
+
+  const addUnit = () => {
+    const value = newUnit.trim();
+    if (!value) return;
+    if (
+      !availableUnits.some(
+        (option) => option.trim().toLowerCase() === value.toLowerCase(),
+      )
+    ) {
+      rememberOption("unit", value);
+    }
+    setField("unit", value);
+    setNewUnit("");
+    setAddingUnit(false);
+  };
+
   const isCodeTaken = (value: string) =>
     products.some(
       (entry) =>
@@ -163,6 +229,9 @@ export function EditProduct({ code }: { code: string }) {
       first?.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
     }
+
+    rememberOption("brand", form.brand);
+    rememberOption("category", form.category);
 
     const newCode = form.code.trim();
     updateProduct(product.id, {
@@ -279,9 +348,12 @@ export function EditProduct({ code }: { code: string }) {
                       list="brand-options"
                       value={form.brand}
                       onChange={(event) => setField("brand", event.target.value)}
+                      onBlur={(event) =>
+                        rememberOption("brand", event.target.value)
+                      }
                     />
                     <datalist id="brand-options">
-                      {productBrands.map((brand) => (
+                      {brandOptions.map((brand) => (
                         <option key={brand} value={brand} />
                       ))}
                     </datalist>
@@ -301,9 +373,12 @@ export function EditProduct({ code }: { code: string }) {
                       onChange={(event) =>
                         setField("category", event.target.value)
                       }
+                      onBlur={(event) =>
+                        rememberOption("category", event.target.value)
+                      }
                     />
                     <datalist id="category-options">
-                      {productCategories.map((category) => (
+                      {categoryOptions.map((category) => (
                         <option key={category} value={category} />
                       ))}
                     </datalist>
@@ -326,16 +401,55 @@ export function EditProduct({ code }: { code: string }) {
                   </div>
                   <div className="filter-field">
                     <label htmlFor="product-unit">Unit</label>
-                    <select
-                      id="product-unit"
-                      className="filter-select"
-                      value={form.unit}
-                      onChange={(event) => setField("unit", event.target.value)}
-                    >
-                      {unitOptions.map((option) => (
-                        <option key={option}>{option}</option>
-                      ))}
-                    </select>
+                    <div className="customer-field-row">
+                      <select
+                        id="product-unit"
+                        className="filter-select"
+                        value={form.unit}
+                        onChange={(event) =>
+                          setField("unit", event.target.value)
+                        }
+                      >
+                        {availableUnits.map((option) => (
+                          <option key={option}>{option}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="customer-add-button"
+                        aria-label="Add new unit"
+                        title="Add new unit"
+                        aria-expanded={addingUnit}
+                        onClick={() => setAddingUnit((current) => !current)}
+                      >
+                        <Icon name="plus" className="w-3.5 h-3.5" strokeWidth={2.2} />
+                      </button>
+                    </div>
+                    {addingUnit && (
+                      <div className="unit-add-row">
+                        <input
+                          id="product-new-unit"
+                          className="filter-input"
+                          placeholder="New unit"
+                          type="text"
+                          value={newUnit}
+                          onChange={(event) => setNewUnit(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              addUnit();
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="ghost-button"
+                          onClick={addUnit}
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

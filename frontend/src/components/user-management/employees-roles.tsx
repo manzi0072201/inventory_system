@@ -210,8 +210,12 @@ export function EmployeesRoles() {
           ? "Employee access and credentials updated."
           : "Shop admin created. Share the credentials securely.",
       );
-    } catch {
-      setError("Unable to save employee.");
+    } catch (cause) {
+      setError(
+        cause instanceof ApiClientError
+          ? cause.message
+          : "Unable to save employee.",
+      );
     } finally {
       setSaving(false);
     }

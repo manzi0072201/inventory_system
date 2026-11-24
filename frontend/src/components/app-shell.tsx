@@ -59,6 +59,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         .filter((value): value is string => Boolean(value)),
     ),
   );
+  const deniedPermissions = errors
+    .filter((message) => message.startsWith("Missing permission:"))
+    .map((message) =>
+      message
+        .replace(/^Missing permission:\s*/, "")
+        .replace(/\.\s*$/, "")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+    );
+  const workspaceErrors = errors.filter(
+    (message) => !message.startsWith("Missing permission:"),
+  );
 
   useEffect(() => {
     setMobileOpen(false);
@@ -116,9 +128,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span>Loading workspace data…</span>
             </div>
           )}
-          {errors.length > 0 && (
-            <div className="user-error-banner">
-              <span>{errors.join(" ")}</span>
+          {deniedPermissions.length > 0 && (
+            <div className="user-error-banner" role="alert">
+              <span>
+                Access denied: {deniedPermissions.join(", ")}.{" "}
+                {deniedPermissions.length === 1
+                  ? "This module is"
+                  : "These modules are"}{" "}
+                disabled for this admin.
+              </span>
+            </div>
+          )}
+          {workspaceErrors.length > 0 && (
+            <div className="user-error-banner" role="alert">
+              <span>{workspaceErrors.join(" ")}</span>
               <button type="button" onClick={retry}>
                 Retry
               </button>

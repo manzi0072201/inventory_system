@@ -47,12 +47,16 @@ export function LoginForm() {
 
       if (!response.ok) {
         const data = (await response.json().catch(() => null)) as {
-          error?: string;
-          message?: string;
+          error?: string | { message?: string } | null;
+          message?: string | null;
         } | null;
-        setError(
-          data?.error ?? data?.message ?? "Unable to sign in. Please try again.",
-        );
+        const message =
+          typeof data?.error === "string"
+            ? data.error
+            : data?.error?.message ??
+              data?.message ??
+              "Unable to sign in. Please try again.";
+        setError(message);
         return;
       }
 

@@ -101,7 +101,11 @@ export function AllSuppliers() {
   const openMenu = (id: string, button: HTMLElement) => {
     const rect = button.getBoundingClientRect();
     const flip = window.innerHeight - rect.bottom < 160;
-    setMenu({ id, top: flip ? rect.top - 6 : rect.bottom + 6, right: window.innerWidth - rect.right, flip });
+    const right = Math.max(
+      8,
+      Math.min(window.innerWidth - rect.right, window.innerWidth - 140),
+    );
+    setMenu({ id, top: flip ? rect.top - 6 : rect.bottom + 6, right, flip });
   };
 
   useEffect(() => {

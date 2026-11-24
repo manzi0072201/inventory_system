@@ -27,9 +27,16 @@ export type ApiErrorPayload = {
   meta?: ApiMeta;
 };
 
+export type AuditLogStats = {
+  actors: number;
+  entities: number;
+  lastEvent: string | null;
+};
+
 export type ApiListResult<T> = {
   items: T[];
   pagination?: PaginationMeta;
+  stats?: AuditLogStats;
 };
 
 export type BackendPermissionMap = Partial<

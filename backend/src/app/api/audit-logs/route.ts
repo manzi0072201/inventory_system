@@ -36,6 +36,12 @@ type AuditLogRow = {
   actor_email: string | null;
 };
 
+type AuditStats = {
+  actors: number;
+  entities: number;
+  lastEvent: string | null;
+};
+
 function boundedText(
   params: URLSearchParams,
   key: string,
@@ -134,7 +140,11 @@ export async function GET(request: Request) {
     const pagination = parsePagination(params);
 
     const countRows = (await sql`
-      select count(*)::int as total
+      select
+        count(*)::int as total,
+        count(distinct al.actor_id)::int as actors,
+        count(distinct al.entity_type)::int as entities,
+        max(al.created_at) as last_event
       from audit_logs al
       left join app_users au on au.id = al.actor_id
       where al.created_at >= ${range.start}::timestamptz
@@ -152,10 +162,20 @@ export async function GET(request: Request) {
           or au.email ilike '%' || ${filters.search} || '%'
           or al.ip_address ilike '%' || ${filters.search} || '%'
         )
-    `) as { total: number }[];
+    `) as {
+      total: number;
+      actors: number;
+      entities: number;
+      last_event: unknown;
+    }[];
 
     const total = Number(countRows[0]?.total ?? 0);
     const totalPages = Math.max(1, Math.ceil(total / pagination.pageSize));
+    const stats: AuditStats = {
+      actors: Number(countRows[0]?.actors ?? 0),
+      entities: Number(countRows[0]?.entities ?? 0),
+      lastEvent: toIsoString(countRows[0]?.last_event),
+    };
     const meta = {
       page: pagination.page,
       pageSize: pagination.pageSize,
@@ -163,6 +183,7 @@ export async function GET(request: Request) {
       totalPages,
       hasNext: pagination.page < totalPages,
       hasPrevious: pagination.page > 1,
+      stats,
     };
 
     const rows = await queryRows(

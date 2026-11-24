@@ -82,9 +82,15 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     try {
       const { items: rows } = await api.notifications();
       setItems(rows.map(mapNotification));
-      setReadIds(
-        new Set(rows.filter((row) => Boolean(row.readAt)).map((row) => row.id)),
-      );
+      setReadIds((current) => {
+        const next = new Set(
+          [...current].filter((id) => id.startsWith("live:")),
+        );
+        rows
+          .filter((row) => Boolean(row.readAt))
+          .forEach((row) => next.add(row.id));
+        return next;
+      });
       setError(null);
     } catch (cause) {
       setError(errorMessage(cause, "Unable to load notifications."));
@@ -95,6 +101,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void load();
+    const timer = window.setInterval(() => void load(), 60_000);
+    return () => window.clearInterval(timer);
   }, [load]);
 
   const notifications = useMemo(
@@ -106,6 +114,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       if (readIds.has(id)) return;
       setReadIds((current) => new Set(current).add(id));
+      if (id.startsWith("live:")) return;
       void api.markNotificationRead(id)
         .then(() => setError(null))
         .catch((cause: unknown) => {
@@ -125,6 +134,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       unreadIds.forEach((id) => next.add(id));
       return next;
     });
+    if (unreadIds.every((id) => id.startsWith("live:"))) return;
     void api.markAllNotificationsRead()
       .then(() => setError(null))
       .catch((cause: unknown) => {

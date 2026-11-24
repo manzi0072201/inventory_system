@@ -2,6 +2,8 @@ import type {
   ApiEnvelope,
   ApiErrorPayload,
   ApiListResult,
+  AuditLogStats,
+  PaginationMeta,
   BackendAnnouncement,
   BackendAuditLog,
   BackendCustomer,
@@ -62,6 +64,7 @@ export class ApiClientError extends Error {
 }
 
 function withPageSize(path: string, pageSize = 200): string {
+  if (/[?&]pageSize=/.test(path)) return path;
   const separator = path.includes("?") ? "&" : "?";
   return `${path}${separator}pageSize=${pageSize}`;
 }
@@ -145,10 +148,21 @@ export async function apiList<T>(
     );
   }
 
-  const envelope = payload as ApiEnvelope<T[]>;
+  const envelope = payload as ApiEnvelope<
+    T[] | { items?: T[]; pagination?: PaginationMeta } | null
+  >;
+  const data = envelope.data;
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.items)
+      ? data.items
+      : [];
   return {
-    items: Array.isArray(envelope.data) ? envelope.data : [],
-    pagination: envelope.meta?.pagination,
+    items,
+    pagination:
+      envelope.meta?.pagination ??
+      (Array.isArray(data) ? undefined : data?.pagination),
+    stats: (envelope.meta as { stats?: AuditLogStats } | undefined)?.stats,
   };
 }
 

@@ -176,9 +176,10 @@ export function AuditLogsPage() {
     const entities = new Set(result.items.map((row) => row.entityType));
     return {
       total: result.pagination?.total ?? result.items.length,
-      actors: actors.size,
-      entities: entities.size,
-      lastEvent: result.items[0]?.createdAt ?? "",
+      actors: result.stats?.actors ?? actors.size,
+      entities: result.stats?.entities ?? entities.size,
+      lastEvent:
+        result.stats?.lastEvent ?? result.items[0]?.createdAt ?? "",
     };
   }, [result]);
 

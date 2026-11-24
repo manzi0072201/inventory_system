@@ -637,9 +637,15 @@ export function ReportsPage() {
       );
   }, [customers, filteredSales, arSales, end, warehouse]);
 
+  const supplierNames = useMemo(
+    () => new Set(suppliers.map((supplier) => supplier.name)),
+    [suppliers],
+  );
+
   const supplierRows = useMemo<SupplierReportRow[]>(() => {
     const map = new Map<string, SupplierReportRow>();
     const ensure = (name: string) => {
+      if (!supplierNames.has(name)) return null;
       const existing = map.get(name);
       if (existing) return existing;
       const profile = suppliers.find((supplier) => supplier.name === name);
@@ -659,21 +665,25 @@ export function ReportsPage() {
     suppliers.forEach((supplier) => ensure(supplier.name));
     filteredPurchases.forEach((purchase) => {
       const row = ensure(purchase.supplier);
+      if (!row) return;
       row.orders += 1;
       row.spend += purchase.total;
       row.paid += purchase.paid;
       if (purchase.date > row.lastOrder) row.lastOrder = purchase.date;
     });
     apPurchases.forEach((purchase) => {
+      const row = ensure(purchase.supplier);
+      if (!row) return;
       const due = Math.max(0, purchase.total - purchase.paid);
       if (due > 0) {
-        addToAging(ensure(purchase.supplier).aging, purchase.date, end, due);
+        addToAging(row.aging, purchase.date, end, due);
       }
     });
     if (warehouse === "All warehouses") {
       suppliers.forEach((supplier) => {
         if (supplier.openingBalance > 0) {
-          ensure(supplier.name).aging.current += supplier.openingBalance;
+          const row = ensure(supplier.name);
+          if (row) row.aging.current += supplier.openingBalance;
         }
       });
     }
@@ -682,7 +692,20 @@ export function ReportsPage() {
       (a, b) =>
         agingTotal(b.aging) - agingTotal(a.aging) || b.spend - a.spend,
     );
-  }, [suppliers, filteredPurchases, apPurchases, end, warehouse]);
+  }, [suppliers, supplierNames, filteredPurchases, apPurchases, end, warehouse]);
+
+  const topSupplierRows = useMemo(
+    () =>
+      supplierRows
+        .filter((row) => row.orders > 0 || row.spend > 0)
+        .sort(
+          (a, b) =>
+            b.spend - a.spend ||
+            b.orders - a.orders ||
+            agingTotal(b.aging) - agingTotal(a.aging),
+        ),
+    [supplierRows],
+  );
 
   const productRows = useMemo<ProductReportRow[]>(
     () =>
@@ -972,12 +995,11 @@ export function ReportsPage() {
   );
   const topSupplierData = useMemo(
     () =>
-      [...supplierRows]
-        .filter((row) => row.spend > 0)
-        .sort((a, b) => b.spend - a.spend)
-        .slice(0, 5)
-        .map((row) => ({ name: row.name, value: row.spend })),
-    [supplierRows],
+      topSupplierRows.slice(0, 5).map((row) => ({
+        name: row.name,
+        value: row.spend,
+      })),
+    [topSupplierRows],
   );
 
   const activeCustomers = customerRows.filter((row) => row.orders > 0).length;
@@ -1675,17 +1697,21 @@ export function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...supplierRows]
-                      .sort((a, b) => b.spend - a.spend)
-                      .slice(0, 5)
-                      .map((row) => (
-                        <tr key={row.name}>
-                          <td>{row.name}</td>
-                          <td>{row.orders}</td>
-                          <td>{formatMoney(row.spend)}</td>
-                          <td>{formatMoney(agingTotal(row.aging))}</td>
-                        </tr>
-                      ))}
+                    {topSupplierRows.slice(0, 5).map((row) => (
+                      <tr key={row.name}>
+                        <td>{row.name}</td>
+                        <td>{row.orders}</td>
+                        <td>{formatMoney(row.spend)}</td>
+                        <td>{formatMoney(agingTotal(row.aging))}</td>
+                      </tr>
+                    ))}
+                    {topSupplierRows.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="report-empty">
+                          No supplier activity in this period.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
