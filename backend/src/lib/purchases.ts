@@ -12,6 +12,7 @@ export type PurchaseRow = {
   subtotal: number | string;
   discount_amount: number | string;
   tax_amount: number | string;
+  shipping_amount: number | string;
   total_amount: number | string;
   paid_amount: number | string;
   payment_method: string;
@@ -54,6 +55,7 @@ export function mapPurchase(row: PurchaseRow) {
     subtotal: Number(row.subtotal),
     discountAmount: Number(row.discount_amount),
     taxAmount: Number(row.tax_amount),
+    shippingAmount: Number(row.shipping_amount),
     totalAmount: total,
     paidAmount: paid,
     dueAmount: Math.max(0, round(total - paid)),

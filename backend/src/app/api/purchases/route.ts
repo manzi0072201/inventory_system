@@ -49,6 +49,7 @@ const createSchema = z
     paidAmount: money.default(0),
     discountAmount: money.default(0),
     taxAmount: money.default(0),
+    shippingAmount: money.default(0),
     shippingStatus: z.string().trim().max(100).nullish(),
     note: z.string().trim().max(1000).nullish(),
     items: z.array(lineItemSchema).min(1).max(100),
@@ -126,7 +127,12 @@ export async function POST(request: Request) {
     });
 
     const prepared = await prepareDocumentItems(sql, input.items, "cost_price");
-    const totals = calculateTotals(prepared, input.discountAmount, input.taxAmount);
+    const totals = calculateTotals(
+      prepared,
+      input.discountAmount,
+      input.taxAmount,
+      input.shippingAmount,
+    );
     const paidAmount = roundMoney(input.paidAmount);
     if (paidAmount > totals.totalAmount) {
       throw unprocessable("Paid amount cannot exceed the purchase total.");
@@ -157,6 +163,7 @@ export async function POST(request: Request) {
       subtotal: totals.subtotal,
       discount_amount: totals.discountAmount,
       tax_amount: totals.taxAmount,
+      shipping_amount: totals.shippingAmount,
       total_amount: totals.totalAmount,
       paid_amount: paidAmount,
       payment_method: input.paymentMethod,
@@ -205,15 +212,15 @@ export async function POST(request: Request) {
             insert into purchases (
               id, reference, date, supplier_id, buyer_id, warehouse_id,
               status, currency, subtotal, discount_amount, tax_amount,
-              total_amount, paid_amount, payment_method, shipping_status,
-              note, created_by
+              shipping_amount, total_amount, paid_amount, payment_method,
+              shipping_status, note, created_by
             )
             values (
               ${id}::uuid, ${reference}, ${date}::date, ${input.supplierId}::uuid,
               ${buyerId}::uuid, ${input.warehouseId}::uuid, ${input.status},
               ${input.currency}, ${totals.subtotal}, ${totals.discountAmount},
-              ${totals.taxAmount}, ${totals.totalAmount}, ${paidAmount},
-              ${input.paymentMethod}, ${input.shippingStatus ?? null},
+              ${totals.taxAmount}, ${totals.shippingAmount}, ${totals.totalAmount},
+              ${paidAmount}, ${input.paymentMethod}, ${input.shippingStatus ?? null},
               ${input.note ?? null}, ${session.appUser.id}::uuid
             )
             returning *

@@ -47,6 +47,7 @@ export type DocumentTotals = {
   subtotal: number;
   discountAmount: number;
   taxAmount: number;
+  shippingAmount: number;
   totalAmount: number;
 };
 
@@ -141,6 +142,7 @@ export function calculateTotals(
   items: PreparedLineItem[],
   headerDiscount = 0,
   headerTax = 0,
+  headerShipping = 0,
 ): DocumentTotals {
   const subtotal = roundMoney(
     items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
@@ -151,11 +153,20 @@ export function calculateTotals(
   const taxAmount = roundMoney(
     items.reduce((sum, item) => sum + item.taxAmount, headerTax),
   );
-  const totalAmount = roundMoney(subtotal - discountAmount + taxAmount);
+  const shippingAmount = roundMoney(headerShipping);
+  const totalAmount = roundMoney(
+    subtotal - discountAmount + taxAmount + shippingAmount,
+  );
   if (totalAmount < 0) {
     throw unprocessable("Document discounts cannot exceed the subtotal.");
   }
-  return { subtotal, discountAmount, taxAmount, totalAmount };
+  return {
+    subtotal,
+    discountAmount,
+    taxAmount,
+    shippingAmount,
+    totalAmount,
+  };
 }
 
 export function toStockItemsJson(items: { productId: string; quantity: number }[]) {

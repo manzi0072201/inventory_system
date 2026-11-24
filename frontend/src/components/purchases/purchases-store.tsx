@@ -55,6 +55,9 @@ function mapPurchase(row: BackendPurchase): Purchase {
     warehouse: row.warehouseName ?? row.warehouseId,
     status: statusOf(row.status),
     currency: row.currency,
+    discountAmount: row.discountAmount,
+    taxAmount: row.taxAmount,
+    shippingAmount: row.shippingAmount,
     total: row.totalAmount,
     paid: row.paidAmount,
     paymentMethod: isPaymentMethod(row.paymentMethod)
@@ -132,6 +135,9 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
             status:
               purchase.status === "Cancelled" ? "Pending" : purchase.status,
             currency: purchase.currency,
+            discountAmount: purchase.discountAmount ?? 0,
+            taxAmount: purchase.taxAmount ?? 0,
+            shippingAmount: purchase.shippingAmount ?? 0,
             paymentMethod: purchase.paymentMethod,
             paidAmount: purchase.paid,
             shippingStatus: purchase.shippingStatus || null,

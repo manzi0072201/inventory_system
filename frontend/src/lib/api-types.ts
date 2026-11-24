@@ -266,6 +266,7 @@ export type BackendSale = {
   subtotal: number;
   discountAmount: number;
   taxAmount: number;
+  shippingAmount: number;
   totalAmount: number;
   paidAmount: number;
   dueAmount: number;
@@ -341,6 +342,7 @@ export type BackendPurchase = {
   subtotal: number;
   discountAmount: number;
   taxAmount: number;
+  shippingAmount: number;
   totalAmount: number;
   paidAmount: number;
   dueAmount: number;

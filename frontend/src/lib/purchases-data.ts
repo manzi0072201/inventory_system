@@ -40,6 +40,9 @@ export type Purchase = {
   warehouse: string;
   status: PurchaseStatus;
   currency: string;
+  discountAmount?: number;
+  taxAmount?: number;
+  shippingAmount?: number;
   total: number;
   paid: number;
   paymentMethod: PaymentMethod;

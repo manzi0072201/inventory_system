@@ -29,6 +29,9 @@ export type Sale = {
   warehouse: string;
   status: SaleStatus;
   currency: string;
+  discountAmount?: number;
+  taxAmount?: number;
+  shippingAmount?: number;
   total: number;
   paid: number;
   paymentMethod: PaymentMethod;
