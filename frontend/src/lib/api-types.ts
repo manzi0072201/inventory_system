@@ -460,6 +460,15 @@ export type BackendAnnouncement = {
   readAt: string | null;
 };
 
+export type AnnouncementInput = {
+  title: string;
+  body: string;
+  category?: string | null;
+  date?: string;
+  tone: "danger" | "warning" | "success" | "info";
+  icon?: string | null;
+};
+
 export type SettingsGroupKey =
   | "company"
   | "localization"

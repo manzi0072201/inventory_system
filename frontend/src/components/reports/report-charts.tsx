@@ -76,6 +76,7 @@ export function ReportTrendChart({
             axisLine={false}
             tickLine={false}
             width={52}
+            domain={[0, "auto"]}
             tickFormatter={formatAxisMoney}
           />
           <Tooltip
@@ -159,6 +160,7 @@ export function ReportProfitChart({ data }: { data: ProfitDatum[] }) {
             axisLine={false}
             tickLine={false}
             width={52}
+            domain={[0, "auto"]}
             tickFormatter={formatAxisMoney}
           />
           <Tooltip
@@ -264,6 +266,7 @@ export function ReportTopBarChart({
           <CartesianGrid stroke={gridStroke} strokeDasharray="4 4" horizontal={false} />
           <XAxis
             type="number"
+            domain={[0, "auto"]}
             tick={axisTick}
             axisLine={false}
             tickLine={false}

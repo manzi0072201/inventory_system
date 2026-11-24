@@ -4,6 +4,7 @@ import type {
   ApiListResult,
   AuditLogStats,
   PaginationMeta,
+  AnnouncementInput,
   BackendAnnouncement,
   BackendAuditLog,
   BackendCustomer,
@@ -506,6 +507,18 @@ export const api = {
   markAllNotificationsRead: () =>
     apiRequest<{ updated: number }>("/notifications/read-all", jsonBody({})),
   announcements: () => apiList<BackendAnnouncement>("/announcements"),
+  createAnnouncement: (input: AnnouncementInput) =>
+    apiRequest<BackendAnnouncement>("/announcements", jsonBody(input)),
+  updateAnnouncement: (id: string, input: Partial<AnnouncementInput>) =>
+    apiRequest<BackendAnnouncement>(
+      `/announcements/${encodeURIComponent(id)}`,
+      { method: "PATCH", body: JSON.stringify(input) },
+    ),
+  deleteAnnouncement: (id: string) =>
+    apiRequest<{ id: string; deleted: boolean }>(
+      `/announcements/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
+    ),
   markAnnouncementRead: (id: string) =>
     apiRequest<{ id: string; readAt: string }>(
       `/announcements/${encodeURIComponent(id)}/read`,

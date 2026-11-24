@@ -1384,4 +1384,8 @@ html[data-theme="dark"] .history-item-icon.tone-gray{background:#252932;color:#a
 .audit-note svg{flex-shrink:0;color:var(--kz-primary)}
 @media(max-width:1100px){.audit-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.audit-filter-actions{width:100%;margin-left:0;justify-content:flex-end}}
 @media(max-width:640px){.audit-summary-grid{grid-template-columns:minmax(0,1fr)}.audit-filter-field,.audit-search-field{min-width:100%;flex-basis:100%}.audit-log-panel-heading{align-items:flex-start}.audit-timeline{padding:4px 12px 10px}.audit-timeline:before{left:29px}.audit-event{grid-template-columns:28px minmax(0,1fr);gap:10px}.audit-event-icon{width:28px;height:28px;border-radius:10px}.audit-event-time{width:100%;margin-left:0}.audit-diff-grid{grid-template-columns:minmax(0,1fr)}.audit-pager{align-items:flex-start;flex-direction:column}}
+.notification-item-main{display:flex;flex:1;min-width:0;align-items:flex-start;gap:10px;border:0;background:transparent;padding:0;color:inherit;text-align:left}
+.notification-item-actions{display:flex;flex:0 0 auto;flex-direction:column;gap:5px}
+.notification-item-actions .ghost-button{height:26px;padding:0 9px;font-size:9.5px}
+@media(max-width:640px){.notification-item-actions{flex-direction:row;align-items:center}}
 

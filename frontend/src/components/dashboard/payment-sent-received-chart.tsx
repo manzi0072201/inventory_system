@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import type { PaymentPoint } from "@/lib/dashboard-data";
+import { formatAxisMoney } from "@/lib/reporting";
 import { Card } from "./panel";
 
 export function PaymentSentReceivedChart({ data }: { data: PaymentPoint[] }) {
@@ -50,7 +51,8 @@ export function PaymentSentReceivedChart({ data }: { data: PaymentPoint[] }) {
                 axisLine={false}
                 tickLine={false}
                 width={45}
-                tickFormatter={(value) => `${value / 1000}k`}
+                domain={[0, "auto"]}
+                tickFormatter={formatAxisMoney}
               />
               <Tooltip />
               <Area

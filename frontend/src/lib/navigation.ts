@@ -14,7 +14,10 @@ export type NavGroup = {
 export const navGroups: NavGroup[] = [
   {
     title: "Main",
-    items: [{ label: "Dashboard", href: "/", icon: "dashboard" }],
+    items: [
+      { label: "Dashboard", href: "/", icon: "dashboard" },
+      { label: "Announcements", href: "/announcements", icon: "announcements" },
+    ],
   },
   {
     title: "Inventory",
@@ -67,7 +70,4 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
-export const navItems: NavItem[] = [
-  ...navGroups.flatMap((group) => group.items),
-  { label: "Announcements", href: "/announcements", icon: "announcements" },
-];
+export const navItems: NavItem[] = navGroups.flatMap((group) => group.items);
