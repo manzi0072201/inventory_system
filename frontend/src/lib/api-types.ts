@@ -73,6 +73,7 @@ export type BackendProfile = {
   status: "Active" | "Suspended";
   lastLoginAt: string | null;
   permissions: BackendPermissionMap;
+  ownerAccess?: boolean;
 };
 
 export type BackendSession = {

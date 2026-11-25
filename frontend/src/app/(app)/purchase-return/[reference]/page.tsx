@@ -3,7 +3,7 @@ import { PurchaseReturnDetails } from "@/components/purchase-return/purchase-ret
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Purchase Return Details | Stocky",
+  title: "Purchase Return Details | VirtueVibe",
   description: "View returned products and supplier refund details.",
 };
 

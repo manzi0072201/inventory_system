@@ -38,6 +38,10 @@ export function serviceUnavailable(message: string): ApiError {
   return new ApiError(503, "SERVICE_UNAVAILABLE", message);
 }
 
+export function tooManyRequests(message: string): ApiError {
+  return new ApiError(429, "TOO_MANY_REQUESTS", message);
+}
+
 export function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === "object" &&

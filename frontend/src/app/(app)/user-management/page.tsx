@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { EmployeesRoles } from "@/components/user-management/employees-roles";
 
 export const metadata: Metadata = {
-  title: "Employees & Roles - Stocky",
+  title: "Employees & Roles - VirtueVibe",
 };
 
 export default function UserManagementPage() {

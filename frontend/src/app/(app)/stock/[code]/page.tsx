@@ -3,7 +3,7 @@ import { StockDetails } from "@/components/stock/stock-details";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Stock Details - Stocky",
+  title: "Stock Details - VirtueVibe",
 };
 
 export default async function StockDetailsPage({

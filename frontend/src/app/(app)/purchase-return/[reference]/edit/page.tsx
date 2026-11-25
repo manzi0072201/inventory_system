@@ -3,7 +3,7 @@ import { EditPurchaseReturn } from "@/components/purchase-return/edit-purchase-r
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Edit Purchase Return | Stocky",
+  title: "Edit Purchase Return | VirtueVibe",
   description: "Update a purchase return, supplier refund, or replacement.",
 };
 

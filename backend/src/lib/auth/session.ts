@@ -1,6 +1,7 @@
 import { getBearerToken, verifyBearerToken, type AuthUser } from "@/lib/auth";
 import { auth } from "@/lib/auth/server";
 import { getSql } from "@/lib/db";
+import { readEnv } from "@/lib/env";
 import { ApiError, forbidden, notFound, unauthorized } from "@/lib/errors";
 import type { AppRole, PermissionMap } from "@/lib/permissions";
 import { getSessionTimeoutMinutes } from "@/lib/settings";
@@ -18,6 +19,7 @@ export type AppUserProfile = {
   status: "Active" | "Suspended";
   lastLoginAt: string | null;
   permissions: PermissionMap;
+  ownerAccess: boolean;
 };
 
 export type RequestSession = {
@@ -45,6 +47,7 @@ type AppUserRow = {
   shop_zone: string | null;
   avatar_url: string | null;
   role: string;
+  effective_role: string | null;
   status: string;
   last_login_at: string | null;
   overrides: Record<string, boolean>;
@@ -62,6 +65,7 @@ async function loadAppUser(authUser: AuthUser): Promise<AppUserProfile> {
       u.shop_zone,
       u.avatar_url,
       u.role,
+      owner_override.role as effective_role,
       u.status,
       u.last_login_at::text as last_login_at,
       coalesce(
@@ -71,12 +75,13 @@ async function loadAppUser(authUser: AuthUser): Promise<AppUserProfile> {
       ) as overrides
     from app_users u
     left join user_permissions perm on perm.user_id = u.id
+    left join owner_role_overrides owner_override on owner_override.user_id = u.id
     where u.auth_user_id = ${authUser.authUserId}
       or (
         ${authUser.email ?? ""}::text <> ''
         and lower(u.email) = lower(${authUser.email ?? ""}::text)
       )
-    group by u.id
+    group by u.id, owner_override.role
   `;
 
   const row = rows[0] as AppUserRow | undefined;
@@ -101,7 +106,13 @@ async function loadAppUser(authUser: AuthUser): Promise<AppUserProfile> {
     throw forbidden("This account is suspended.");
   }
 
-  const role: AppRole = row.role === "super_admin" ? "super_admin" : "admin";
+  const effectiveRole = row.effective_role ?? row.role;
+  const role: AppRole =
+    effectiveRole === "super_admin" ? "super_admin" : "admin";
+  const ownerEmail = readEnv("OWNER_EMAIL")?.toLowerCase();
+  const ownerAccess = Boolean(
+    ownerEmail && row.email.toLowerCase() === ownerEmail,
+  );
 
   return {
     id: row.id,
@@ -115,6 +126,7 @@ async function loadAppUser(authUser: AuthUser): Promise<AppUserProfile> {
     status: "Active",
     lastLoginAt: row.last_login_at,
     permissions: row.overrides ?? {},
+    ownerAccess,
   };
 }
 

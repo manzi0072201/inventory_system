@@ -3,7 +3,7 @@ import { EditWarehouse } from "@/components/warehouses/edit-warehouse";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Edit Warehouse - Stocky",
+  title: "Edit Warehouse - VirtueVibe",
 };
 
 export default async function EditWarehousePage({

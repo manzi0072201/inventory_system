@@ -41,6 +41,7 @@ function toAppUser(profile: BackendProfile): AppUser {
     permissions: permissionsFor(profile),
     createdAt: "",
     lastLogin: profile.lastLoginAt,
+    ownerAccess: profile.ownerAccess ?? false,
   };
 }
 

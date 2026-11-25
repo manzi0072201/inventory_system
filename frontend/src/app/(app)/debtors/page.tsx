@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AllDebtors } from "@/components/debtors/all-debtors";
 
 export const metadata: Metadata = {
-  title: "Debtors - Stocky",
+  title: "Debtors - VirtueVibe",
 };
 
 export default function DebtorsPage() {

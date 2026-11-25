@@ -2,7 +2,7 @@
 import { CreateSupplier } from "@/components/suppliers/create-supplier";
 
 export const metadata: Metadata = {
-  title: "Create Supplier - Stocky",
+  title: "Create Supplier - VirtueVibe",
 };
 
 export default function CreateSupplierPage() {

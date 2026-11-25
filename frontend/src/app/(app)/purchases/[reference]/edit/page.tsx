@@ -3,7 +3,7 @@ import { EditPurchase } from "@/components/purchases/edit-purchase";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Edit Purchase - Stocky",
+  title: "Edit Purchase - VirtueVibe",
 };
 
 export default async function EditPurchasePage({

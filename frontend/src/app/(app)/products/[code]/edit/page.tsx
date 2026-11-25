@@ -3,7 +3,7 @@ import { EditProduct } from "@/components/products/edit-product";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Edit Product - Stocky",
+  title: "Edit Product - VirtueVibe",
 };
 
 export default async function EditProductPage({

@@ -3,7 +3,7 @@ import { EditSupplier } from "@/components/suppliers/edit-supplier";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Edit Supplier - Stocky",
+  title: "Edit Supplier - VirtueVibe",
 };
 
 export default async function EditSupplierPage({

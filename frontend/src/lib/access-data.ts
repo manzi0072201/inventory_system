@@ -33,6 +33,7 @@ export type AppUser = {
   permissions: AdminPermissions;
   createdAt: string;
   lastLogin: string | null;
+  ownerAccess?: boolean;
 };
 
 export type PermissionDefinition = {

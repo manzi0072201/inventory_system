@@ -277,7 +277,7 @@ export function AnnouncementsPage() {
       {error ? <div className="form-error">{error}</div> : null}
 
       <div className="panel">
-        <div className="panel-heading">
+        <div className="panel-heading announcement-head">
           <div className="notification-head-copy">
             <b>{t("Announcements")}</b>
             <span>

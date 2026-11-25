@@ -15,6 +15,7 @@ import { languages, localeFor, type LanguageCode } from "@/lib/i18n";
 import { HistoryPanel } from "./history/history-panel";
 import { useLanguage } from "./language/language-provider";
 import { useSettings } from "./settings/settings-store";
+import { OwnerRoleSwitch } from "./auth/owner-role-switch";
 
 function notificationIcon(item: NotificationItem): IconName {
   switch (item.category) {
@@ -496,6 +497,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
                       <Icon name="arrowRight" className="w-3.5 h-3.5" />
                     </button>
                   )}
+                  <OwnerRoleSwitch onSelected={() => setMenuOpen(false)} />
                   <button
                     type="button"
                     role="menuitem"

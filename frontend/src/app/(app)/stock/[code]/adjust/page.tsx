@@ -3,7 +3,7 @@ import { CreateStockAdjustment } from "@/components/stock/create-stock-adjustmen
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Adjust Stock - Stocky",
+  title: "Adjust Stock - VirtueVibe",
 };
 
 export default async function AdjustProductStockPage({

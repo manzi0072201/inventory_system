@@ -32,14 +32,17 @@ export async function DELETE(request: Request) {
     if (session.source === "cookie") {
       await auth.signOut();
     }
-    await writeAuditLog(getSql(), {
-      actorId: session.appUser.id,
-      action: "auth.sign_out",
-      entityType: "app_user",
-      entityId: session.appUser.id,
-      ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
-      userAgent: request.headers.get("user-agent"),
-    });
+    if (!session.appUser.ownerAccess) {
+      await writeAuditLog(getSql(), {
+        actorId: session.appUser.id,
+        action: "auth.sign_out",
+        entityType: "app_user",
+        entityId: session.appUser.id,
+        ipAddress:
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        userAgent: request.headers.get("user-agent"),
+      });
+    }
     return ok({ signedOut: true });
   } catch (error) {
     return failUnexpected(error);

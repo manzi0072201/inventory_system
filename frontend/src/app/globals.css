@@ -1010,6 +1010,7 @@ html[data-theme="dark"] .history-item-side strong{color:#c7c9d0}
 .profile-panel-item:disabled{opacity:.6;cursor:default}
 .profile-panel-item.danger{color:#c43b52}
 .profile-panel-item.danger:hover{background:#fff0f2;color:#b52f45}
+.profile-panel-error{flex-basis:100%;color:#c43b52;font-size:9px;font-weight:500}
 .profile-panel-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;border-top:1px solid #f0eff4;background:#fcfbfe;font-size:8.5px;color:#a0a1a8}
 .profile-panel-foot b{color:#6f7179;font-weight:700}
 .profile-page{display:flex;flex-direction:column;gap:14px}
@@ -1388,4 +1389,6 @@ html[data-theme="dark"] .history-item-icon.tone-gray{background:#252932;color:#a
 .notification-item-actions{display:flex;flex:0 0 auto;flex-direction:column;gap:5px}
 .notification-item-actions .ghost-button{height:26px;padding:0 9px;font-size:9.5px}
 @media(max-width:640px){.notification-item-actions{flex-direction:row;align-items:center}}
+@media(max-width:640px){.announcement-head{height:auto;min-height:42px;padding:10px 12px;flex-direction:column;align-items:stretch;gap:8px}.announcement-head .notification-head-copy{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 7px}.announcement-head .notification-head-copy span{margin-top:0}.announcement-head .notification-head-actions{width:100%;justify-content:space-between;gap:7px;flex-wrap:nowrap}.announcement-head .range-tabs{flex:1;min-width:0}.announcement-head .range-tabs button{flex:1;padding:6px 8px;font-size:10px;white-space:nowrap}.announcement-head .primary-button{height:30px;padding:0 9px;font-size:9.5px}.notification-item{flex-wrap:wrap;padding:10px 12px;gap:8px}.notification-item-main{flex-basis:100%;padding-right:14px}.notification-item-actions{width:100%;justify-content:flex-end;padding-left:43px}.notification-item-actions .ghost-button{flex:1;justify-content:center;height:28px}.notification-dot{right:12px;top:14px}.notification-copy{padding-right:10px}}
+@media(max-width:380px){.announcement-head .notification-head-actions{flex-wrap:wrap}.announcement-head .range-tabs{width:100%;flex-basis:100%}.announcement-head .primary-button{width:100%;justify-content:center}.notification-item-actions{padding-left:0}}
 

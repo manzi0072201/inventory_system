@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ReportsPage } from "@/components/reports/reports-page";
 
 export const metadata: Metadata = {
-  title: "Reports · Stocky",
+  title: "Reports · VirtueVibe",
   description: "Business reporting for sales, purchases, inventory, customers, suppliers, and finance.",
 };
 

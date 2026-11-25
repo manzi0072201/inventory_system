@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ITG Inventory",
-    short_name: "Stocky",
+    name: "VirtueVibe Inventory",
+    short_name: "VirtueVibe",
     description: "Inventory and sales dashboard for your store.",
     id: "/",
     start_url: "/",

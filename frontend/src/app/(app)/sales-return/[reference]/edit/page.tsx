@@ -3,7 +3,7 @@ import { EditSalesReturn } from "@/components/sales-return/edit-sales-return";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Edit Sales Return | Stocky",
+  title: "Edit Sales Return | VirtueVibe",
   description: "Update a sales return, refund, or replacement.",
 };
 

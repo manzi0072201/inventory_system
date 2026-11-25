@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CreateStockAdjustment } from "@/components/stock/create-stock-adjustment";
 
 export const metadata: Metadata = {
-  title: "Adjust Stock - Stocky",
+  title: "Adjust Stock - VirtueVibe",
 };
 
 export default function AdjustStockPage() {

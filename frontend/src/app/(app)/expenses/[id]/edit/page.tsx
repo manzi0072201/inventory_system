@@ -3,7 +3,7 @@ import { EditExpense } from "@/components/expenses/edit-expense";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export const metadata: Metadata = {
-  title: "Edit Expense - Stocky",
+  title: "Edit Expense - VirtueVibe",
 };
 
 export default async function EditExpensePage({
