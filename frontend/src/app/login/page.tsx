@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
-import { OwnerAccessForm } from "@/components/auth/owner-access-form";
+import { HiddenOwnerAccess } from "@/components/auth/hidden-owner-access";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -23,7 +23,7 @@ export default function LoginPage() {
       <section className="ks-auth-main">
         <div className="ks-auth-inner">
           <LoginForm />
-          <OwnerAccessForm />
+          <HiddenOwnerAccess />
         </div>
       </section>
     </main>
