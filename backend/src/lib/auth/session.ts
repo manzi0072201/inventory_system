@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth/server";
 import { getSql } from "@/lib/db";
 import { ApiError, forbidden, notFound, unauthorized } from "@/lib/errors";
 import type { AppRole, PermissionMap } from "@/lib/permissions";
+import { getSessionTimeoutMinutes } from "@/lib/settings";
 import { resolveStoredFile } from "@/lib/storage";
 
 export type AppUserProfile = {
@@ -23,6 +24,16 @@ export type RequestSession = {
   source: "bearer" | "cookie";
   authUser: AuthUser;
   appUser: AppUserProfile;
+};
+
+export type ResolveSessionOptions = {
+  skipActivityCheck?: boolean;
+};
+
+const ACTIVITY_UPDATE_THRESHOLD_MS = 30_000;
+
+type ActivityRow = {
+  last_active_epoch: number | string | null;
 };
 
 type AppUserRow = {
@@ -107,8 +118,51 @@ async function loadAppUser(authUser: AuthUser): Promise<AppUserProfile> {
   };
 }
 
+async function readLastActivity(userId: string): Promise<number | null> {
+  const sql = getSql();
+  const rows = (await sql`
+    select extract(epoch from last_active_at)::float8 as last_active_epoch
+    from app_user_activity
+    where user_id = ${userId}::uuid
+  `) as ActivityRow[];
+  const value = Number(rows[0]?.last_active_epoch);
+  return Number.isFinite(value) ? value * 1000 : null;
+}
+
+export async function touchActivity(userId: string): Promise<void> {
+  const lastActive = await readLastActivity(userId);
+  if (lastActive !== null && Date.now() - lastActive < ACTIVITY_UPDATE_THRESHOLD_MS) {
+    return;
+  }
+  const sql = getSql();
+  await sql`
+    insert into app_user_activity (user_id, last_active_at)
+    values (${userId}::uuid, now())
+    on conflict (user_id) do update set last_active_at = now()
+  `;
+}
+
+async function hasIdleSessionExpired(
+  userId: string,
+  timeoutMinutes: number,
+): Promise<boolean> {
+  const lastActive = await readLastActivity(userId);
+  if (lastActive === null) {
+    await touchActivity(userId);
+    return false;
+  }
+
+  const idleMs = Math.max(0, Date.now() - lastActive);
+  if (idleMs < timeoutMinutes * 60_000) return false;
+
+  const sql = getSql();
+  await sql`delete from app_user_activity where user_id = ${userId}::uuid`;
+  return true;
+}
+
 export async function resolveRequestSession(
   request: Request,
+  options: ResolveSessionOptions = {},
 ): Promise<RequestSession | null> {
   let authUser: AuthUser;
   let source: RequestSession["source"];
@@ -133,13 +187,26 @@ export async function resolveRequestSession(
   }
 
   const appUser = await loadAppUser(authUser);
+  if (source === "cookie" && !options.skipActivityCheck) {
+    const timeoutMinutes = await getSessionTimeoutMinutes();
+    if (await hasIdleSessionExpired(appUser.id, timeoutMinutes)) {
+      try {
+        await auth.signOut();
+      } catch {
+        return null;
+      }
+      throw unauthorized("Your session expired because of inactivity.");
+    }
+    await touchActivity(appUser.id);
+  }
   return { source, authUser, appUser };
 }
 
 export async function requireRequestSession(
   request: Request,
+  options: ResolveSessionOptions = {},
 ): Promise<RequestSession> {
-  const session = await resolveRequestSession(request);
+  const session = await resolveRequestSession(request, options);
   if (!session) throw unauthorized();
   return session;
 }

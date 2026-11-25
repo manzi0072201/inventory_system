@@ -3,6 +3,7 @@ import { requireRequestSession, touchLastLogin } from "@/lib/auth/session";
 import { writeAuditLog } from "@/lib/audit";
 import { getSql } from "@/lib/db";
 import { failUnexpected, ok } from "@/lib/http";
+import { getSessionTimeoutMinutes } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
       source: session.source,
       user: session.authUser,
       profile: session.appUser,
+      sessionTimeoutMinutes: await getSessionTimeoutMinutes(),
     });
   } catch (error) {
     return failUnexpected(error);
@@ -23,7 +25,10 @@ export async function GET(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await requireRequestSession(request);
+    const expired = new URL(request.url).searchParams.get("reason") === "inactive";
+    const session = await requireRequestSession(request, {
+      skipActivityCheck: expired,
+    });
     if (session.source === "cookie") {
       await auth.signOut();
     }

@@ -352,7 +352,7 @@ export const defaultSettings: SystemSettings = {
   requireEmailVerification: true,
   inviteExpiryDays: 7,
   twoFactorRequired: false,
-  sessionTimeoutMinutes: 60,
+  sessionTimeoutMinutes: 120,
   passwordMinLength: 8,
   passwordRequireUppercase: true,
   passwordRequireLowercase: true,

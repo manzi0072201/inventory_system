@@ -625,7 +625,15 @@ export const settingsTabConfig: Record<SettingsTab, SettingsTabConfig> = {
         title: "Sessions and sign-in",
         fields: [
           { key: "twoFactorRequired", label: "Require two-factor authentication", type: "toggle" },
-          { key: "sessionTimeoutMinutes", label: "Session timeout", type: "number", min: 5, suffix: "minutes" },
+          {
+            key: "sessionTimeoutMinutes",
+            label: "Inactivity logout after",
+            type: "number",
+            min: 1,
+            max: 1440,
+            suffix: "minutes",
+            hint: "Automatically signs out after this period with no mouse, keyboard, touch, or scroll activity.",
+          },
           { key: "maxLoginAttempts", label: "Maximum login attempts", type: "number", min: 1, max: 20 },
           { key: "lockoutMinutes", label: "Lockout duration", type: "number", min: 1, suffix: "minutes" },
           { key: "rememberDevice", label: "Allow remembered devices", type: "toggle" },

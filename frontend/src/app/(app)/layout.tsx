@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { AccessProvider } from "@/components/access/access-provider";
+import { InactivityLogout } from "@/components/auth/inactivity-logout";
 import { AppShell } from "@/components/app-shell";
 import { CustomersProvider } from "@/components/customers/customers-store";
 import { ExpensesProvider } from "@/components/expenses/expenses-store";
@@ -34,7 +35,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                         <StockProvider>
                           <WarehousesProvider>
                             <NotificationsProvider>
-                              <AppShell>{children}</AppShell>
+                              <AppShell>
+                                <InactivityLogout />
+                                {children}
+                              </AppShell>
                             </NotificationsProvider>
                           </WarehousesProvider>
                         </StockProvider>
