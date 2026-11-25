@@ -6,17 +6,19 @@ import { getSessionUserFromRequest } from "@/lib/api-auth";
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isApi = pathname.startsWith("/api/");
+  const isPublicAsset =
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/sw.js" ||
+    pathname === "/favicon.ico" ||
+    pathname === "/apple-touch-icon.png" ||
+    pathname === "/login-image.png" ||
+    /^\/icon-(192|512|1024|maskable-192|maskable-512)\.png$/.test(pathname);
 
-  if (pathname.startsWith("/api/backend/")) {
+  if (isPublicAsset || pathname.startsWith("/api/backend/")) {
     return NextResponse.next();
   }
 
   const user = await getSessionUserFromRequest(request);
-
-
-  if (pathname === "/login-image.png") {
-    return NextResponse.next();
-  }
 
   if (pathname === "/login") {
     if (user) {
@@ -62,5 +64,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth|login-image\\.png).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|manifest\\.webmanifest|sw\\.js|apple-touch-icon\\.png|icon-.*\\.png|login-image\\.png).*)",
+  ],
 };
