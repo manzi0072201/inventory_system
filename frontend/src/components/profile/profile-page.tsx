@@ -272,15 +272,15 @@ export function ProfilePage({ edit = false }: { edit?: boolean }) {
             </div>
             <div className="filter-field">
               <label htmlFor="profile-email">{t("Email address")}</label>
-                <input
-                  id="profile-email"
-                  type="email"
-                  className="filter-input"
-                  value={details.email}
-                  onChange={(event) => updateDetail("email", event.target.value)}
-                  maxLength={180}
-                />
-
+              <input
+                id="profile-email"
+                type="email"
+                className="filter-input"
+                value={details.email}
+                onChange={(event) => updateDetail("email", event.target.value)}
+                maxLength={180}
+              />
+              <small>{t("Profile email only. Login email is managed by Neon Auth.")}</small>
             </div>
             <div className="filter-field">
               <label htmlFor="profile-phone">{t("Phone")}</label>

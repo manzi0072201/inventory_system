@@ -62,13 +62,9 @@ export async function PATCH(request: Request) {
       }
     }
 
-    if (
-      session.source === "cookie" &&
-      (input.name || input.email || avatarValue !== undefined)
-    ) {
+    if (session.source === "cookie" && (input.name || avatarValue !== undefined)) {
       const { error } = await auth.updateUser({
         ...(input.name ? { name: input.name } : {}),
-        ...(input.email ? { email: input.email } : {}),
         ...(avatarValue !== undefined ? { image: authImage } : {}),
       });
       if (error) {
