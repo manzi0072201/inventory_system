@@ -4,6 +4,7 @@ import { writeAuditLog } from "@/lib/audit";
 import { getSql } from "@/lib/db";
 import { badRequest, conflict, isUniqueViolation } from "@/lib/errors";
 import { failUnexpected, ok, requestMeta, requireRole } from "@/lib/http";
+import { isOwnerEmail } from "@/lib/owner-access";
 import { paginate, parsePagination } from "@/lib/pagination";
 import { PERMISSION_KEYS, type PermissionKey } from "@/lib/permissions";
 import { parseSort, sortRows } from "@/lib/sorting";
@@ -67,7 +68,9 @@ export async function GET(request: Request) {
       "asc",
     );
 
-    let items = await Promise.all((await fetchUsers(sql)).map(mapUser));
+    let items = (await Promise.all((await fetchUsers(sql)).map(mapUser))).filter(
+      (item) => !isOwnerEmail(item.email),
+    );
     const term = query.q?.toLowerCase();
     if (term) {
       items = items.filter((item) =>

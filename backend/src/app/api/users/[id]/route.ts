@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { badRequest, conflict, isUniqueViolation, notFound } from "@/lib/errors";
 import { failUnexpected, ok, requestMeta, requireRole } from "@/lib/http";
+import { isOwnerEmail } from "@/lib/owner-access";
 import { writeAuditLog } from "@/lib/audit";
 import { PERMISSION_KEYS, type PermissionKey } from "@/lib/permissions";
 import { fetchUser, mapUser, replaceUserPermissions } from "@/lib/users";
@@ -31,10 +32,13 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(request: Request, context: RouteContext) {
   try {
-    await requireRole(request, ["super_admin"]);
+    const session = await requireRole(request, ["super_admin"]);
     const id = parseUuid((await context.params).id);
     const row = await fetchUser(getSql(), id);
     if (!row) throw notFound("User not found.");
+    if (isOwnerEmail(row.email) && !session.appUser.ownerAccess) {
+      throw notFound("User not found.");
+    }
     return ok(await mapUser(row));
   } catch (error) {
     return failUnexpected(error);
@@ -48,6 +52,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     const sql = getSql();
     const existing = await fetchUser(sql, id);
     if (!existing) throw notFound("User not found.");
+    if (isOwnerEmail(existing.email) && !session.appUser.ownerAccess) {
+      throw notFound("User not found.");
+    }
 
     const input = await parseJson(request, updateSchema);
     if (id === session.appUser.id && (input.status || input.role)) {
@@ -133,6 +140,9 @@ export async function DELETE(request: Request, context: RouteContext) {
     const sql = getSql();
     const existing = await fetchUser(sql, id);
     if (!existing) throw notFound("User not found.");
+    if (isOwnerEmail(existing.email) && !session.appUser.ownerAccess) {
+      throw notFound("User not found.");
+    }
 
     await sql`
       update app_users
