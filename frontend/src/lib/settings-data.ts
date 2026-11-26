@@ -5,6 +5,9 @@ export type FontSizeChoice = "Small" | "Medium" | "Large";
 
 export type SystemSettings = {
   companyName: string;
+  sidebarTitle: string;
+  sidebarSubtitle: string;
+  footerCopyright: string;
   legalName: string;
   businessType: string;
   companyEmail: string;
@@ -219,6 +222,9 @@ export type SystemSettings = {
 
 export const defaultSettings: SystemSettings = {
   companyName: "Stocky Inventory",
+  sidebarTitle: "VirtueVibe Trading",
+  sidebarSubtitle: "Inventory",
+  footerCopyright: "© 2026 Virtue Vibe Trading. All rights reserved.",
   legalName: "Stocky Inventory Ltd",
   businessType: "Retail & Wholesale",
   companyEmail: "hello@stocky.rw",

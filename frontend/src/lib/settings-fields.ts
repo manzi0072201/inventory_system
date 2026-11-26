@@ -140,6 +140,33 @@ export const settingsTabConfig: Record<SettingsTab, SettingsTabConfig> = {
           },
         ],
       },
+      {
+        title: "App branding",
+        description: "Text shown in the sidebar and page footer.",
+        fields: [
+          {
+            key: "sidebarTitle",
+            label: "Sidebar title",
+            type: "text",
+            placeholder: "VirtueVibe Trading",
+            hint: "Bold app name shown at the top of the sidebar.",
+          },
+          {
+            key: "sidebarSubtitle",
+            label: "Sidebar subtitle",
+            type: "text",
+            placeholder: "Inventory",
+            hint: "Text shown directly under the sidebar title.",
+          },
+          {
+            key: "footerCopyright",
+            label: "Footer copyright",
+            type: "text",
+            wide: true,
+            placeholder: "© 2026 Virtue Vibe Trading. All rights reserved.",
+          },
+        ],
+      },
     ],
   },
   Localization: {

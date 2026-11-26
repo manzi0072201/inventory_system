@@ -37,8 +37,8 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
           )}
         </div>
         <div>
-          <b>ITG Inventory</b>
-          <small>ProBuild Ltd</small>
+          <b>{settings.sidebarTitle || "VirtueVibe Trading"}</b>
+          <small>{settings.sidebarSubtitle || "Inventory"}</small>
         </div>
         <button
           type="button"

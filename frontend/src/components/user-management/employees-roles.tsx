@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAccess } from "@/components/access/access-provider";
 import { Icon } from "@/components/ui/icon";
 import { api, ApiClientError } from "@/lib/api";
 import type { BackendUser } from "@/lib/api-types";
@@ -90,6 +91,7 @@ function salesOnlyPermissions(): AdminPermissions {
 }
 
 export function EmployeesRoles() {
+  const { user: currentUser } = useAccess();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -139,7 +141,6 @@ export function EmployeesRoles() {
   };
 
   const openEdit = (user: AppUser) => {
-    if (user.role !== "admin") return;
     setEditing(user);
     setForm(formFromUser(user));
     setFormOpen(true);
@@ -190,12 +191,18 @@ export function EmployeesRoles() {
         email: form.email,
         shopZone: form.shopZone,
         phone: form.phone,
-        role: "admin",
-        permissions: form.permissions,
-        ...(editing
-          ? { status: form.status }
-          : { status: form.status, password: form.password }),
       };
+      if (!editing) {
+        Object.assign(body, {
+          role: "admin",
+          status: form.status,
+          password: form.password,
+          permissions: form.permissions,
+        });
+      } else if (editing.role === "admin") {
+        body.permissions = form.permissions;
+        if (editing.id !== currentUser?.id) body.status = form.status;
+      }
       const saved = editing
         ? await api.updateUser(editing.id, body)
         : await api.createUser(body);
@@ -222,7 +229,6 @@ export function EmployeesRoles() {
   };
 
   const removeEmployee = async (user: AppUser) => {
-    if (user.role !== "admin") return;
     if (
       !window.confirm(
         `Delete ${user.name}? Their login will stop working immediately.`,
@@ -408,16 +414,16 @@ export function EmployeesRoles() {
                         </span>
                       </td>
                       <td>
-                        {user.role === "admin" ? (
-                          <div className="employee-actions">
-                            <button
-                              type="button"
-                              className="icon-button"
-                              title="Edit employee"
-                              onClick={() => openEdit(user)}
-                            >
-                              <Icon name="edit" className="h-4 w-4" />
-                            </button>
+                        <div className="employee-actions">
+                          <button
+                            type="button"
+                            className="icon-button"
+                            title="Edit user"
+                            onClick={() => openEdit(user)}
+                          >
+                            <Icon name="edit" className="h-4 w-4" />
+                          </button>
+                          {user.role === "admin" && (
                             <button
                               type="button"
                               className="icon-button danger"
@@ -426,13 +432,8 @@ export function EmployeesRoles() {
                             >
                               <Icon name="trash" className="h-4 w-4" />
                             </button>
-                          </div>
-                        ) : (
-                          <span className="employee-protected">
-                            <Icon name="lock" className="h-3.5 w-3.5" />
-                            Protected
-                          </span>
-                        )}
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -446,10 +447,16 @@ export function EmployeesRoles() {
           <section className="panel employee-form-panel">
             <div className="panel-heading">
               <div>
-                <h2>{editing ? "Edit shop admin" : "New shop admin"}</h2>
+                <h2>
+                  {editing
+                    ? editing.role === "super_admin"
+                      ? "Edit super admin"
+                      : "Edit shop admin"
+                    : "New shop admin"}
+                </h2>
                 <p className="employee-form-subtitle">
                   {editing
-                    ? "Update credentials, status, and module access."
+                    ? "Update account details, status, and access."
                     : "Set the login credentials and choose what this admin can control."}
                 </p>
               </div>
@@ -521,45 +528,52 @@ export function EmployeesRoles() {
                     placeholder="+250 ..."
                   />
                 </label>
-                <label>
-                  <span>{editing ? "New password" : "Password"}</span>
-                  <input
-                    className="filter-input"
-                    type="password"
-                    value={form.password}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        password: event.target.value,
-                      }))
-                    }
-                    placeholder={
-                      editing ? "Leave blank to keep current" : "At least 6 characters"
-                    }
-                    autoComplete="new-password"
-                  />
-                </label>
-                <label>
-                  <span>Confirm password</span>
-                  <input
-                    className="filter-input"
-                    type="password"
-                    value={form.confirmPassword}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        confirmPassword: event.target.value,
-                      }))
-                    }
-                    placeholder="Repeat password"
-                    autoComplete="new-password"
-                  />
-                </label>
+                {editing?.role !== "super_admin" && (
+                  <>
+                    <label>
+                      <span>{editing ? "New password" : "Password"}</span>
+                      <input
+                        className="filter-input"
+                        type="password"
+                        value={form.password}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            password: event.target.value,
+                          }))
+                        }
+                        placeholder={
+                          editing
+                            ? "Leave blank to keep current"
+                            : "At least 6 characters"
+                        }
+                        autoComplete="new-password"
+                      />
+                    </label>
+                    <label>
+                      <span>Confirm password</span>
+                      <input
+                        className="filter-input"
+                        type="password"
+                        value={form.confirmPassword}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            confirmPassword: event.target.value,
+                          }))
+                        }
+                        placeholder="Repeat password"
+                        autoComplete="new-password"
+                      />
+                    </label>
+                  </>
+                )}
                 <label>
                   <span>Account status</span>
                   <select
                     className="filter-select"
                     value={form.status}
+                    disabled={editing?.id === currentUser?.id}
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
@@ -573,8 +587,9 @@ export function EmployeesRoles() {
                 </label>
               </div>
 
-              <div className="permission-editor">
-                <div className="permission-editor-head">
+              {editing?.role !== "super_admin" && (
+                <div className="permission-editor">
+                  <div className="permission-editor-head">
                   <div>
                     <h3>Module permissions</h3>
                     <p>
@@ -666,8 +681,9 @@ export function EmployeesRoles() {
                       </div>
                     </section>
                   ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {error && <p className="field-error">{error}</p>}
 
