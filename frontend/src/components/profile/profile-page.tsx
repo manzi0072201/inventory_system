@@ -126,11 +126,13 @@ export function ProfilePage({ edit = false }: { edit?: boolean }) {
     try {
       const input: {
         name: string;
+        email: string;
         phone: string;
         shopZone: string;
         avatarUrl?: string | null;
       } = {
         name: details.name,
+        email: details.email,
         phone: details.phone,
         shopZone: details.shopZone,
       };
@@ -275,7 +277,7 @@ export function ProfilePage({ edit = false }: { edit?: boolean }) {
                   type="email"
                   className="filter-input"
                   value={details.email}
-                  readOnly
+                  onChange={(event) => updateDetail("email", event.target.value)}
                   maxLength={180}
                 />
 

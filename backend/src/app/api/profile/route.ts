@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth/server";
 import { requireRequestSession } from "@/lib/auth/session";
 import { writeAuditLog } from "@/lib/audit";
 import { getSql } from "@/lib/db";
-import { badRequest } from "@/lib/errors";
+import { badRequest, conflict, isUniqueViolation } from "@/lib/errors";
 import { failUnexpected, ok, requestMeta } from "@/lib/http";
 import {
   deleteManagedObject,
@@ -17,6 +17,7 @@ export const dynamic = "force-dynamic";
 const updateProfileSchema = z
   .object({
     name: z.string().min(2).max(120).optional(),
+    email: z.string().trim().email().max(255).optional(),
     phone: z.string().max(50).optional(),
     shopZone: z.string().max(120).optional(),
     avatarUrl: storedFileValue
@@ -49,9 +50,25 @@ export async function PATCH(request: Request) {
     const avatarValue = input.avatarUrl === undefined ? undefined : input.avatarUrl;
     const authImage = avatarValue ? await resolveStoredFile(avatarValue) : null;
 
-    if (session.source === "cookie" && (input.name || avatarValue !== undefined)) {
+    if (input.email) {
+      const duplicate = await sql`
+        select 1 from app_users
+        where lower(email) = lower(${input.email})
+          and id <> ${session.appUser.id}::uuid
+        limit 1
+      `;
+      if (duplicate.length > 0) {
+        throw conflict("A user with that email already exists.");
+      }
+    }
+
+    if (
+      session.source === "cookie" &&
+      (input.name || input.email || avatarValue !== undefined)
+    ) {
       const { error } = await auth.updateUser({
         ...(input.name ? { name: input.name } : {}),
+        ...(input.email ? { email: input.email } : {}),
         ...(avatarValue !== undefined ? { image: authImage } : {}),
       });
       if (error) {
@@ -59,19 +76,27 @@ export async function PATCH(request: Request) {
       }
     }
 
-    await sql`
-      update app_users
-      set
-        name = coalesce(${input.name ?? null}, name),
-        phone = coalesce(${input.phone ?? null}, phone),
-        shop_zone = coalesce(${input.shopZone ?? null}, shop_zone),
-        avatar_url = case
-          when ${avatarValue !== undefined} then ${avatarValue ?? null}
-          else avatar_url
-        end,
-        updated_at = now()
-      where id = ${session.appUser.id}::uuid
-    `;
+    try {
+      await sql`
+        update app_users
+        set
+          name = coalesce(${input.name ?? null}, name),
+          email = coalesce(${input.email ?? null}, email),
+          phone = coalesce(${input.phone ?? null}, phone),
+          shop_zone = coalesce(${input.shopZone ?? null}, shop_zone),
+          avatar_url = case
+            when ${avatarValue !== undefined} then ${avatarValue ?? null}
+            else avatar_url
+          end,
+          updated_at = now()
+        where id = ${session.appUser.id}::uuid
+      `;
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw conflict("A user with that email already exists.");
+      }
+      throw error;
+    }
 
     if (
       avatarValue !== undefined &&

@@ -319,7 +319,7 @@ export function EmployeesRoles() {
           </span>
           <div>
             <small>Super admin</small>
-            <strong>Protected</strong>
+            <strong>Editable</strong>
           </div>
         </div>
       </div>

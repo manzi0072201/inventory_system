@@ -291,6 +291,7 @@ export const api = {
   profile: () => apiRequest<BackendProfile>("/profile"),
   updateProfile: (input: {
     name?: string;
+    email?: string;
     phone?: string | null;
     shopZone?: string | null;
     avatarUrl?: string | null;
