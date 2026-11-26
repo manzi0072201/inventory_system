@@ -12,9 +12,9 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "ITG - Inventory & Sales Dashboard",
+  title: "VirtueVibe Trading - Inventory & Sales Dashboard",
   description: "Inventory and sales dashboard for your store.",
-  applicationName: "ITG Inventory",
+  applicationName: "VirtueVibe Trading Inventory",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
