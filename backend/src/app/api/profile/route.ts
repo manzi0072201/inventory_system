@@ -55,6 +55,10 @@ export async function PATCH(request: Request) {
         select 1 from app_users
         where lower(email) = lower(${input.email})
           and id <> ${session.appUser.id}::uuid
+        union all
+        select 1 from neon_auth."user"
+        where lower(email) = lower(${input.email})
+          and id::text <> ${session.appUser.authUserId}
         limit 1
       `;
       if (duplicate.length > 0) {
@@ -87,6 +91,17 @@ export async function PATCH(request: Request) {
           updated_at = now()
         where id = ${session.appUser.id}::uuid
       `;
+
+      if (input.email) {
+        await sql`
+          update neon_auth."user"
+          set
+            email = ${input.email},
+            "emailVerified" = false,
+            "updatedAt" = now()
+          where id::text = ${session.appUser.authUserId}
+        `;
+      }
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw conflict("A user with that email already exists.");

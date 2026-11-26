@@ -54,6 +54,22 @@ export async function PATCH(request: Request, context: RouteContext) {
       throw badRequest("You cannot change your own role or status.");
     }
 
+    if (input.email) {
+      const duplicate = await sql`
+        select 1 from app_users
+        where lower(email) = lower(${input.email})
+          and id <> ${id}::uuid
+        union all
+        select 1 from neon_auth."user"
+        where lower(email) = lower(${input.email})
+          and id::text <> ${existing.auth_user_id}
+        limit 1
+      `;
+      if (duplicate.length > 0) {
+        throw conflict("A user with that email already exists.");
+      }
+    }
+
     try {
       await sql`
         update app_users
@@ -67,6 +83,17 @@ export async function PATCH(request: Request, context: RouteContext) {
           updated_at = now()
         where id = ${id}::uuid
       `;
+
+      if (input.email) {
+        await sql`
+          update neon_auth."user"
+          set
+            email = ${input.email},
+            "emailVerified" = false,
+            "updatedAt" = now()
+          where id::text = ${existing.auth_user_id}
+        `;
+      }
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw conflict("A user with that email already exists.");

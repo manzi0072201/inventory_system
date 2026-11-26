@@ -280,7 +280,7 @@ export function ProfilePage({ edit = false }: { edit?: boolean }) {
                 onChange={(event) => updateDetail("email", event.target.value)}
                 maxLength={180}
               />
-              <small>{t("Profile email only. Login email is managed by Neon Auth.")}</small>
+              <small>{t("Changing this also updates your login email.")}</small>
             </div>
             <div className="filter-field">
               <label htmlFor="profile-phone">{t("Phone")}</label>
