@@ -280,6 +280,7 @@ export type BackendSale = {
   customerName: string | null;
   warehouseName: string | null;
   sellerName: string | null;
+  items?: BackendSaleItem[];
 };
 
 export type BackendSaleItem = {

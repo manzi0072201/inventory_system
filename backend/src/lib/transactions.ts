@@ -37,6 +37,7 @@ export type PreparedLineItem = {
   codeSnapshot: string;
   quantity: number;
   unitPrice: number;
+  costPrice: number;
   discountAmount: number;
   taxAmount: number;
   lineTotal: number;
@@ -110,6 +111,7 @@ export async function prepareDocumentItems(
       codeSnapshot: product.code,
       quantity: item.quantity,
       unitPrice: roundMoney(unitPrice),
+      costPrice: roundMoney(Number(product.cost_price)),
       discountAmount: roundMoney(discountAmount),
       taxAmount: roundMoney(taxAmount),
       lineTotal,

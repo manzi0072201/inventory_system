@@ -71,7 +71,31 @@ export async function GET(request: Request) {
         s.*,
         c.name as customer_name,
         w.name as warehouse_name,
-        u.name as seller_name
+        u.name as seller_name,
+        (
+          select coalesce(
+            json_agg(
+              json_build_object(
+                'id', si.id,
+                'sale_id', si.sale_id,
+                'product_id', si.product_id,
+                'name_snapshot', si.name_snapshot,
+                'code_snapshot', si.code_snapshot,
+                'quantity', si.quantity,
+                'unit_price', si.unit_price,
+                'discount_amount', si.discount_amount,
+                'tax_amount', si.tax_amount,
+                'line_total', si.line_total,
+                'sort_order', si.sort_order,
+                'unit_cost', si.unit_cost
+              )
+              order by si.sort_order
+            ),
+            '[]'::json
+          )
+          from sale_items si
+          where si.sale_id = s.id
+        ) as items
       from sales s
       join customers c on c.id = s.customer_id
       join warehouses w on w.id = s.warehouse_id
@@ -113,6 +137,12 @@ export async function POST(request: Request) {
     });
 
     const prepared = await prepareDocumentItems(sql, input.items, "selling_price");
+    const belowCost = prepared.find((item) => item.unitPrice < item.costPrice);
+    if (belowCost) {
+      throw unprocessable(
+        `Selling price for ${belowCost.nameSnapshot} cannot be below the cost price.`,
+      );
+    }
     const unitCosts = await getUnitCostMap(
       sql,
       prepared.map((item) => item.productId),

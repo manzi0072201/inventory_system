@@ -3,13 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useCustomers } from "@/components/customers/customers-store";
 import { Icon } from "@/components/ui/icon";
-import { dueOf, formatMoney, paymentStatusOf } from "@/lib/sales-data";
+import { useSettings } from "@/components/settings/settings-store";
+import {
+  dueOf,
+  formatMoney,
+  paymentStatusOf,
+  soldProductNames,
+} from "@/lib/sales-data";
+import { printSalePdf } from "./sales-io";
 import { useSales } from "./sales-store";
 
 export function SaleDetails({ reference }: { reference: string }) {
   const router = useRouter();
   const { sales, deleteSale, hydrated } = useSales();
   const { customers } = useCustomers();
+  const { settings } = useSettings();
 
   const sale = sales.find(
     (entry) => entry.reference === reference || entry.id === reference,
@@ -129,7 +137,7 @@ export function SaleDetails({ reference }: { reference: string }) {
           <button
             type="button"
             className="ghost-button"
-            onClick={() => window.print()}
+            onClick={() => printSalePdf(sale, settings.logoUrl)}
           >
             <Icon name="purchases" className="w-3.5 h-3.5" />
             PDF
@@ -184,6 +192,12 @@ export function SaleDetails({ reference }: { reference: string }) {
                     <span className="truncate">{sale.warehouse}</span>
                   </div>
                 </div>
+                <div className="filter-field span-2">
+                  <label>Products Sold</label>
+                  <div className="detail-value">
+                    <span className="truncate">{soldProductNames(sale)}</span>
+                  </div>
+                </div>
                 <div className="filter-field">
                   <label>Currency</label>
                   <div className="detail-value">
@@ -211,6 +225,54 @@ export function SaleDetails({ reference }: { reference: string }) {
                   </div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section className="panel">
+            <div className="panel-heading">
+              <h2>Products Sold</h2>
+            </div>
+            <div className="panel-body form-body">
+              {sale.items?.length ? (
+                <div className="table-scroll">
+                  <table className="sales-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Code</th>
+                        <th className="right-align" scope="col">
+                          Quantity
+                        </th>
+                        <th className="right-align" scope="col">
+                          Unit Price
+                        </th>
+                        <th className="right-align" scope="col">
+                          Line Total
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sale.items.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.name}</td>
+                          <td className="sale-muted">{item.code}</td>
+                          <td className="right-align">{item.quantity}</td>
+                          <td className="right-align sale-amount">
+                            {formatMoney(item.unitPrice)}
+                          </td>
+                          <td className="right-align sale-amount">
+                            {formatMoney(item.unitPrice * item.quantity)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="sale-muted">
+                  No product details recorded for this sale.
+                </p>
+              )}
             </div>
           </section>
 

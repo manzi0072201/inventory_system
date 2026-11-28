@@ -15,7 +15,11 @@ import {
   defaultPaymentMethod,
   isPaymentMethod,
 } from "@/lib/payments-data";
-import { type Sale, type SaleStatus } from "@/lib/sales-data";
+import {
+  type Sale,
+  type SaleDetailItem,
+  type SaleStatus,
+} from "@/lib/sales-data";
 
 export const CREATED_FLAG = "stocky:created-sale";
 
@@ -69,6 +73,14 @@ function mapSale(row: BackendSale): Sale {
       : defaultPaymentMethod(row.reference),
     shippingStatus: row.shippingStatus ?? "",
     note: row.note ?? undefined,
+    items: row.items?.map<SaleDetailItem>((item) => ({
+      id: item.id,
+      productId: item.productId,
+      name: item.name,
+      code: item.code,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    })),
   };
 }
 

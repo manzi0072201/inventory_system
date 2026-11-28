@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import type { Sale } from "@/lib/sales-data";
-import { formatMoney } from "@/lib/sales-data";
+import { formatMoney, soldProductNames } from "@/lib/sales-data";
 import { SaleMenu, type SaleMenuState } from "./sale-menu";
 
 export type SalesSortKey =
@@ -12,6 +12,7 @@ export type SalesSortKey =
   | "reference"
   | "seller"
   | "customer"
+  | "products"
   | "warehouse"
   | "status"
   | "currency"
@@ -30,6 +31,7 @@ const sortColumns: {
   { key: "reference", label: "Reference", minWidth: 100 },
   { key: "seller", label: "Seller", minWidth: 110 },
   { key: "customer", label: "Customer", minWidth: 120 },
+  { key: "products", label: "Products", minWidth: 180 },
   { key: "warehouse", label: "Warehouse", minWidth: 120 },
   { key: "status", label: "Status", minWidth: 100 },
   { key: "currency", label: "Currency", minWidth: 80 },
@@ -194,6 +196,7 @@ export function SalesTable({
                 </td>
                 <td>{sale.seller}</td>
                 <td>{sale.customer}</td>
+                <td className="sale-muted">{soldProductNames(sale)}</td>
                 <td>{sale.warehouse}</td>
                 <td>
                   <span className={`status-pill ${sale.status.toLowerCase()}`}>
@@ -211,7 +214,7 @@ export function SalesTable({
             ))}
             {rows.length === 0 && (
               <tr className="empty-row">
-                <td colSpan={11}>No sales match your filters</td>
+                <td colSpan={12}>No sales match your filters</td>
               </tr>
             )}
           </tbody>

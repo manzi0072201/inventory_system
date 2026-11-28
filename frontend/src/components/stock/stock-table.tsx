@@ -13,6 +13,7 @@ export type StockSortKey =
   | "product"
   | "warehouse"
   | "category"
+  | "beginningStock"
   | "onHand"
   | "reorderPoint"
   | "status"
@@ -31,6 +32,7 @@ const sortColumns: {
   { key: "product", label: "Product", minWidth: 240 },
   { key: "warehouse", label: "Warehouse", minWidth: 130 },
   { key: "category", label: "Category", minWidth: 90 },
+  { key: "beginningStock", label: "Beginning Stock", minWidth: 120, align: "right" },
   { key: "onHand", label: "On Hand", minWidth: 110, align: "right" },
   { key: "reorderPoint", label: "Reorder At", minWidth: 100, align: "right" },
   { key: "status", label: "Status", minWidth: 100 },
@@ -169,6 +171,9 @@ export function StockTable({
                 </td>
                 <td>{row.product.warehouse}</td>
                 <td>{row.product.category}</td>
+                <td className="right-align sale-amount">
+                  {row.beginningStock.toLocaleString()}
+                </td>
                 <td className="right-align">
                   <div className="stock-level-cell">
                     <strong>{row.onHand.toLocaleString()}</strong>
@@ -214,7 +219,7 @@ export function StockTable({
             ))}
             {rows.length === 0 && (
               <tr className="empty-row">
-                <td colSpan={10}>No stock records match your filters</td>
+                <td colSpan={11}>No stock records match your filters</td>
               </tr>
             )}
           </tbody>

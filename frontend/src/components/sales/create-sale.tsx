@@ -27,7 +27,8 @@ type LineItem = {
   productId: string;
   name: string;
   code: string;
-  price: number;
+  price: string;
+  minPrice: number;
   stock: number;
   quantity: number;
   discount: string;
@@ -57,7 +58,7 @@ function numberValue(raw: string): number {
 }
 
 function lineTotals(item: LineItem) {
-  const gross = item.price * item.quantity;
+  const gross = numberValue(item.price) * item.quantity;
   const discount = Math.min(numberValue(item.discount), gross);
   const taxable = Math.max(0, gross - discount);
   const tax = (taxable * Math.min(100, numberValue(item.tax))) / 100;
@@ -177,7 +178,8 @@ export function CreateSale() {
           productId: product.id,
           name: product.name,
           code: product.code,
-          price: product.price,
+          price: String(product.price),
+          minPrice: product.cost,
           stock: product.quantity,
           quantity: 1,
           discount: "0",
@@ -209,6 +211,15 @@ export function CreateSale() {
     if (!customer) found.customer = "Customer is required";
     if (!warehouse) found.warehouse = "Warehouse is required";
     if (items.length === 0) found.items = "Add at least one product";
+    for (const item of items) {
+      const sellingPrice = numberValue(item.price);
+      if (sellingPrice <= 0) {
+        found[`price-${item.productId}`] = "Enter a selling price";
+      } else if (sellingPrice < item.minPrice) {
+        found[`price-${item.productId}`] =
+          `Cannot be less than cost (${formatMoney(item.minPrice)})`;
+      }
+    }
     if (numberValue(discount) > 0) {
       if (discountType === "Percentage" && numberValue(discount) > 100) {
         found.discount = "Percentage cannot exceed 100";
@@ -271,7 +282,7 @@ export function CreateSale() {
         return {
           productId: item.productId,
           quantity: item.quantity,
-          unitPrice: item.price,
+          unitPrice: numberValue(item.price),
           discountAmount: totals.discount,
           taxAmount: totals.tax,
         };
@@ -478,7 +489,7 @@ export function CreateSale() {
                       <tr>
                         <th scope="col">Product Name</th>
                         <th className="right-align" scope="col">
-                          Net Unit Price
+                          Selling Price
                         </th>
                         <th className="right-align" scope="col">
                           Stock
@@ -511,8 +522,28 @@ export function CreateSale() {
                                 <span>{item.code}</span>
                               </div>
                             </td>
-                            <td className="right-align sale-amount">
-                              {formatMoney(item.price)}
+                            <td className="right-align">
+                              <input
+                                className="filter-input line-input"
+                                type="number"
+                                min={item.minPrice}
+                                step="0.01"
+                                value={item.price}
+                                onChange={(event) =>
+                                  updateItem(item.productId, {
+                                    price: event.target.value,
+                                  })
+                                }
+                                aria-label={`Selling price for ${item.name}`}
+                              />
+                              <span className="sale-muted line-hint">
+                                Min {formatMoney(item.minPrice)}
+                              </span>
+                              {errors[`price-${item.productId}`] ? (
+                                <span className="field-error">
+                                  {errors[`price-${item.productId}`]}
+                                </span>
+                              ) : null}
                             </td>
                             <td className="right-align sale-muted">
                               {item.stock}

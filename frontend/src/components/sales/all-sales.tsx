@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
-import { paymentStatusOf } from "@/lib/sales-data";
+import { paymentStatusOf, soldProductNames } from "@/lib/sales-data";
+import { useSettings } from "@/components/settings/settings-store";
 import { SalesSummary } from "./sales-summary";
 import { SalesFilters, type SalesFilterKey } from "./sales-filters";
 import {
@@ -19,6 +20,7 @@ import { CREATED_FLAG, UPDATED_FLAG, useSales } from "./sales-store";
 export function AllSales() {
   const router = useRouter();
   const { sales, deleteSale } = useSales();
+  const { settings } = useSettings();
   const [date, setDate] = useState("");
   const [customer, setCustomer] = useState("");
   const [warehouse, setWarehouse] = useState("");
@@ -134,7 +136,7 @@ export function AllSales() {
       if (shippingStatus && sale.shippingStatus !== shippingStatus) return false;
       if (search) {
         const haystack =
-          `${sale.reference} ${sale.seller} ${sale.customer} ${sale.warehouse} ${sale.status} ${sale.shippingStatus}`.toLowerCase();
+          `${sale.reference} ${sale.seller} ${sale.customer} ${soldProductNames(sale)} ${sale.warehouse} ${sale.status} ${sale.shippingStatus}`.toLowerCase();
         if (!haystack.includes(search)) return false;
       }
       return true;
@@ -153,8 +155,8 @@ export function AllSales() {
   const sorted = useMemo(() => {
     const direction = sortDir === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) => {
-      const left = a[sortKey];
-      const right = b[sortKey];
+      const left = sortKey === "products" ? soldProductNames(a) : a[sortKey];
+      const right = sortKey === "products" ? soldProductNames(b) : b[sortKey];
       if (typeof left === "number" && typeof right === "number") {
         return (left - right) * direction;
       }
@@ -301,15 +303,15 @@ export function AllSales() {
           <nav className="breadcrumb" aria-label="Breadcrumb">
             <span className="crumb-link">Sales</span>
             <span className="crumb-sep">/</span>
-            <span className="crumb-current">All Sales</span>
+            <span className="crumb-current">VVT-All Sales</span>
           </nav>
-          <h1>All Sales</h1>
+          <h1>VVT-All Sales</h1>
         </div>
         <div className="heading-actions">
           <button
             type="button"
             className="ghost-button"
-            onClick={() => printSalesPdf(sorted)}
+            onClick={() => printSalesPdf(sorted, settings.logoUrl)}
           >
             <Icon name="purchases" className="w-3.5 h-3.5" />
             PDF

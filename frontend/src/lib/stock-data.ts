@@ -42,6 +42,7 @@ export type StockMovement = {
 
 export type StockRow = {
   product: Product;
+  beginningStock: number;
   onHand: number;
   reorderPoint: number;
   status: StockStatus;
@@ -213,17 +214,24 @@ export function buildStockRows(
   movements: StockMovement[],
 ): StockRow[] {
   const lastByProduct = new Map<string, StockMovement>();
+  const movementTotals = new Map<string, number>();
 
   for (const movement of movements) {
     if (!lastByProduct.has(movement.productId)) {
       lastByProduct.set(movement.productId, movement);
     }
+    movementTotals.set(
+      movement.productId,
+      (movementTotals.get(movement.productId) ?? 0) + movement.quantity,
+    );
   }
 
   return products.map((product) => {
     const reorderPoint = reorderPointFor(product);
+    const beginningStock = product.quantity - (movementTotals.get(product.id) ?? 0);
     return {
       product,
+      beginningStock,
       onHand: product.quantity,
       reorderPoint,
       status: stockStatusOf(product.quantity, reorderPoint, product.stocked),

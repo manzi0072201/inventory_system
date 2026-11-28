@@ -53,6 +53,8 @@ function sortValue(row: StockRow, key: StockSortKey): string | number {
       return row.product.warehouse;
     case "category":
       return row.product.category;
+    case "beginningStock":
+      return row.beginningStock;
     case "onHand":
       return row.onHand;
     case "reorderPoint":

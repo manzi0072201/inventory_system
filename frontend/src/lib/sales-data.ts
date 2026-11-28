@@ -71,6 +71,21 @@ export function dueOf(sale: Sale): number {
   return Math.max(0, sale.total - sale.paid);
 }
 
+export function soldProductNames(sale: Sale): string {
+  const grouped = new Map<string, { name: string; quantity: number }>();
+  for (const item of sale.items ?? []) {
+    const current = grouped.get(item.productId);
+    grouped.set(item.productId, {
+      name: item.name,
+      quantity: (current?.quantity ?? 0) + item.quantity,
+    });
+  }
+  if (grouped.size === 0) return "—";
+  return [...grouped.values()]
+    .map((item) => `${item.name} (${item.quantity})`)
+    .join(", ");
+}
+
 export function formatMoney(value: number): string {
   return `RWF ${value.toLocaleString("en-US", {
     minimumFractionDigits: 2,

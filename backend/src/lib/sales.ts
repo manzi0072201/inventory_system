@@ -24,6 +24,7 @@ export type SaleRow = {
   customer_name?: string | null;
   warehouse_name?: string | null;
   seller_name?: string | null;
+  items?: SaleItemRow[];
 };
 
 export type SaleItemRow = {
@@ -69,6 +70,7 @@ export function mapSale(row: SaleRow) {
     customerName: row.customer_name ?? null,
     warehouseName: row.warehouse_name ?? null,
     sellerName: row.seller_name ?? null,
+    items: row.items?.map(mapSaleItem),
   };
 }
 

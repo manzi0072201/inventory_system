@@ -34,6 +34,7 @@ export function stockToCsv(rows: StockRow[]): string {
     "Brand",
     "Category",
     "Warehouse",
+    "Beginning Stock",
     "On Hand",
     "Reorder Point",
     "Status",
@@ -49,6 +50,7 @@ export function stockToCsv(rows: StockRow[]): string {
       row.product.brand,
       row.product.category,
       row.product.warehouse,
+      String(row.beginningStock),
       String(row.onHand),
       String(row.reorderPoint),
       row.status,
@@ -85,6 +87,7 @@ export function printStockPdf(rows: StockRow[]): void {
         <td>${escapeHtml(row.product.brand)}</td>
         <td>${escapeHtml(row.product.category)}</td>
         <td>${escapeHtml(row.product.warehouse)}</td>
+        <td class="num">${row.beginningStock.toLocaleString()}</td>
         <td class="num">${row.onHand.toLocaleString()}</td>
         <td class="num">${row.reorderPoint.toLocaleString()}</td>
         <td>${escapeHtml(row.status)}</td>
@@ -116,7 +119,7 @@ export function printStockPdf(rows: StockRow[]): void {
 <p class="meta">${rows.length} product${rows.length === 1 ? "" : "s"} — generated ${escapeHtml(new Date().toLocaleString())}</p>
 <table>
   <thead>
-    <tr><th>Product</th><th>Code</th><th>Brand</th><th>Category</th><th>Warehouse</th><th class="num">On Hand</th><th class="num">Reorder At</th><th>Status</th><th class="num">Unit Cost</th><th class="num">Stock Value</th></tr>
+    <tr><th>Product</th><th>Code</th><th>Brand</th><th>Category</th><th>Warehouse</th><th class="num">Beginning Stock</th><th class="num">On Hand</th><th class="num">Reorder At</th><th>Status</th><th class="num">Unit Cost</th><th class="num">Stock Value</th></tr>
   </thead>
   <tbody>
 ${htmlRows}
